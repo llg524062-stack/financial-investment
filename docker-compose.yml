@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: finance
+      POSTGRES_PASSWORD: finance
+      POSTGRES_DB: finance
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U finance"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+psycopg2://finance:finance@db:5432/finance
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,https://financial-investment-one.vercel.app
+      WATCHLIST: NVDA,MSFT,AAPL,TSLA,600519
+      RUN_SYNC_ON_STARTUP: "true"
+      FRED_API_KEY: ${FRED_API_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend/data:/app/data
+
+volumes:
+  pgdata:

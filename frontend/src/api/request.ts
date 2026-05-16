@@ -88,4 +88,9 @@ export async function httpPost<T>(url: string, body?: unknown, config?: AxiosReq
   return (res.data.data ?? res.data) as T;
 }
 
+export async function httpPut<T>(url: string, body?: unknown, config?: AxiosRequestConfig): Promise<T> {
+  const res = await request.put<ApiResponse<T>>(url, body, config);
+  return (res.data.data ?? res.data) as T;
+}
+
 export default request;

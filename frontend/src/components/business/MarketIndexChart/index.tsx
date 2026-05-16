@@ -1,34 +1,54 @@
-import { useMemo, useRef, useState } from 'react';
-import { INDEX_META, MARKET_INDEX_SERIES } from '@/api/mock/data';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { INDEX_META } from '@/constants/indexMeta';
+import { fetchIndexSeries } from '@/api/modules/dashboard';
 import { useMarketIndexChart } from '@/hooks/useMarketIndexChart';
 import type { MarketIndexPeriod } from '@/types/market';
 
 type IndexKey = keyof typeof INDEX_META;
-type PeriodKey = keyof typeof MARKET_INDEX_SERIES;
+type PeriodKey = '1m' | '3m' | '6m' | '1y';
 
 function periodReturn(series: number[]): { text: string; up: boolean } {
+  if (!series.length) return { text: '区间 —', up: true };
   const pct = ((series[series.length - 1] - series[0]) / series[0]) * 100;
   const sign = pct >= 0 ? '+' : '';
   return { text: `区间 ${sign}${pct.toFixed(1)}%`, up: pct >= 0 };
 }
+
+const EMPTY_PACK: MarketIndexPeriod = {
+  labels: [],
+  sp500: [100],
+  nasdaq: [100],
+  csi300: [100],
+  insight: '加载中…',
+};
 
 export function MarketIndexChart() {
   const [period, setPeriod] = useState<PeriodKey>('3m');
   const [visible, setVisible] = useState<Set<IndexKey>>(
     () => new Set(['sp500', 'nasdaq', 'csi300']),
   );
+  const [pack, setPack] = useState<MarketIndexPeriod>(EMPTY_PACK);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const pack: MarketIndexPeriod = MARKET_INDEX_SERIES[period];
+
+  useEffect(() => {
+    void fetchIndexSeries(period).then(setPack);
+  }, [period]);
 
   useMarketIndexChart(canvasRef, pack, visible);
 
   const stats = useMemo(
     () =>
-      (['sp500', 'nasdaq', 'csi300'] as IndexKey[]).map((key) => ({
-        key,
-        ...INDEX_META[key],
-        ret: periodReturn(pack[key]),
-      })),
+      (['sp500', 'nasdaq', 'csi300'] as IndexKey[]).map((key) => {
+        const series = pack[key];
+        const last = series.length ? series[series.length - 1] : 0;
+        return {
+          key,
+          name: INDEX_META[key].label,
+          color: INDEX_META[key].color,
+          price: series.length ? `${last.toFixed(1)}` : '—',
+          ret: periodReturn(series),
+        };
+      }),
     [pack],
   );
 
@@ -50,9 +70,7 @@ export function MarketIndexChart() {
       <div className="card-header" style={{ flexWrap: 'wrap', gap: 12 }}>
         <div style={{ flex: 1, minWidth: 200 }}>
           <div className="card-label">主要指数走势</div>
-          <p className="index-chart-sub">
-            以区间起点归一化为 100，对比标普 500 / 纳斯达克 / 沪深 300 相对强弱（Mock）
-          </p>
+          <p className="index-chart-sub">归一化对比（数据来自后端 AkShare / yfinance 同步）</p>
         </div>
         <div className="chart-tabs" role="tablist">
           {(['1m', '3m', '6m', '1y'] as PeriodKey[]).map((p) => (
@@ -77,7 +95,7 @@ export function MarketIndexChart() {
             onClick={() => toggleIndex(key)}
           >
             <span className="dot" style={{ background: INDEX_META[key].color }} />
-            {INDEX_META[key].name}
+            {INDEX_META[key].label}
           </button>
         ))}
       </div>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 
 export interface SubTabItem {
   key: string;
@@ -16,21 +16,13 @@ interface SubTabsProps {
 
 export function SubTabs({ items, defaultKey, className = 'sub-tabs', onChange }: SubTabsProps) {
   const visible = useMemo(() => items.filter((i) => !i.hidden), [items]);
-  const visibleKeys = visible.map((i) => i.key).join(',');
-
-  const [active, setActive] = useState(() => {
+  const resolveActive = () => {
     const initial = defaultKey ?? visible[0]?.key ?? '';
     return visible.some((v) => v.key === initial) ? initial : (visible[0]?.key ?? '');
-  });
+  };
 
-  useEffect(() => {
-    if (!visible.some((v) => v.key === active)) {
-      const next = defaultKey && visible.some((v) => v.key === defaultKey)
-        ? defaultKey
-        : (visible[0]?.key ?? '');
-      setActive(next);
-    }
-  }, [visibleKeys, defaultKey, active, visible]);
+  const [active, setActive] = useState(resolveActive);
+  const activeKey = visible.some((v) => v.key === active) ? active : resolveActive();
 
   const handleClick = (key: string) => {
     setActive(key);
@@ -46,7 +38,7 @@ export function SubTabs({ items, defaultKey, className = 'sub-tabs', onChange }:
           <button
             key={item.key}
             type="button"
-            className={`sub-tab${active === item.key ? ' active' : ''}`}
+            className={`sub-tab${activeKey === item.key ? ' active' : ''}`}
             onClick={() => handleClick(item.key)}
           >
             {item.label}
@@ -57,7 +49,7 @@ export function SubTabs({ items, defaultKey, className = 'sub-tabs', onChange }:
         <div
           key={item.key}
           id={item.key}
-          className={`sub-panel${active === item.key ? ' active' : ''}`}
+          className={`sub-panel${activeKey === item.key ? ' active' : ''}`}
         >
           {item.content}
         </div>

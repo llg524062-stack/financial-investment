@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { INDEX_META } from '@/api/mock/data';
+import { INDEX_META } from '@/constants/indexMeta';
 import type { MarketIndexPeriod } from '@/types/market';
 
 type IndexKey = keyof typeof INDEX_META;

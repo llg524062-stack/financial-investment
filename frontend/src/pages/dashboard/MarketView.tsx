@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchIndexCards, fetchWatchlist } from '@/api/modules/market';
+import { fetchIndexCards, fetchWatchlist, fetchAlerts } from '@/api/modules/market';
+import { fetchMarketExtras } from '@/api/modules/pages';
+import type { MarketExtras } from '@/api/modules/pages';
 import { useAppStore } from '@/store/appStore';
 import { MarketIndexChart } from '@/components/business/MarketIndexChart';
 import { PageLoading } from '@/components/common/PageLoading';
-import type { IndexCard, StockRowItem } from '@/types/market';
+import type { AlertItem, IndexCard, StockRowItem } from '@/types/market';
 
 const badgeClass = (t: IndexCard['changeType']) =>
   t === 'up' ? 'badge-up' : t === 'down' ? 'badge-down' : t === 'warn' ? 'badge-warn' : 'badge-neutral';
@@ -14,15 +16,34 @@ export function MarketView() {
   const setScopeSymbol = useAppStore((s) => s.setScopeSymbol);
   const [cards, setCards] = useState<IndexCard[]>([]);
   const [watchlist, setWatchlist] = useState<StockRowItem[]>([]);
+  const [extras, setExtras] = useState<MarketExtras | null>(null);
+  const [alertCount, setAlertCount] = useState(0);
+  const [marketAlerts, setMarketAlerts] = useState<AlertItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    void Promise.all([fetchIndexCards(), fetchWatchlist()]).then(([c, w]) => {
+    void Promise.all([
+      fetchIndexCards(),
+      fetchWatchlist(),
+      fetchMarketExtras(),
+      fetchAlerts('market'),
+    ]).then(([c, w, ex, alerts]) => {
       setCards(c);
       setWatchlist(w);
+      setExtras(ex);
+      setAlertCount(alerts.length);
+      setMarketAlerts(alerts);
       setLoading(false);
     });
   }, []);
+
+  const heatCls = (lvl: number) => {
+    if (lvl >= 2) return 'heat-up-3';
+    if (lvl === 1) return 'heat-up-1';
+    if (lvl === 0) return 'heat-flat';
+    if (lvl === -1) return 'heat-down-1';
+    return 'heat-down-3';
+  };
 
   const pickSymbol = (symbol: string, name: string) => {
     setScopeSymbol(symbol, `${symbol} · ${name}`);
@@ -57,32 +78,24 @@ export function MarketView() {
       <div className="card" style={{ marginBottom: 24 }}>
         <div className="card-label">大环境一句话</div>
         <div className="dim-grid">
-          <div className="dim-item">
-            <div className="dim-score" style={{ color: 'var(--warning)' }}>62</div>
-            <div className="dim-label">适合买股票吗</div>
-            <div className="dim-plain">可以参与，控制仓位</div>
-          </div>
-          <div className="dim-item">
-            <div className="dim-score" style={{ color: 'var(--accent)' }}>55%</div>
-            <div className="dim-label">建议股票仓位</div>
-            <div className="dim-plain">中性偏积极</div>
-          </div>
-          <div className="dim-item">
-            <div className="dim-score" style={{ color: 'var(--accent)' }}>78</div>
-            <div className="dim-label">最佳方向</div>
-            <div className="dim-plain">AI算力、电力设备</div>
-          </div>
-          <div className="dim-item">
-            <div className="dim-score" style={{ color: 'var(--danger)' }}>35</div>
-            <div className="dim-label">建议回避</div>
-            <div className="dim-plain">地产链、高估值题材</div>
-          </div>
+          {(extras?.environment?.length ? extras.environment : [
+            { label: '适合买股票吗', score: 62, desc: '可以参与，控制仓位' },
+            { label: '建议股票仓位', score: 55, desc: '中性偏积极' },
+            { label: '最佳方向', score: 78, desc: 'AI算力、电力设备' },
+            { label: '建议回避', score: 35, desc: '地产链、高估值题材' },
+          ]).map((e) => (
+            <div key={e.label} className="dim-item">
+              <div className="dim-score" style={{ color: e.score >= 65 ? 'var(--accent)' : 'var(--warning)' }}>{e.score}</div>
+              <div className="dim-label">{e.label}</div>
+              <div className="dim-plain">{e.desc}</div>
+            </div>
+          ))}
         </div>
       </div>
       <div className="card" style={{ marginBottom: 24 }}>
         <div className="card-header">
           <div className="card-label">自选股雷达 · 点击深入分析</div>
-          <span className="card-meta">共 6 只 · 2 只触发异常</span>
+          <span className="card-meta">共 {watchlist.length} 只 · {watchlist.filter((w) => w.scoreType === 'warn' || w.scoreType === 'down').length} 只需关注</span>
         </div>
         <div className="quick-picks">
           {['NVDA', 'MSFT', 'AAPL', '600519'].map((s) => (
@@ -115,22 +128,26 @@ export function MarketView() {
         <div className="card">
           <div className="card-label">今日行业涨跌</div>
           <div className="heatmap" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-            {[
-              ['半导体', '+2.1%', 'heat-up-3'],
-              ['AI软件', '+1.5%', 'heat-up-2'],
-              ['电力', '+0.8%', 'heat-up-1'],
-              ['消费', '0.0%', 'heat-flat'],
-            ].map(([name, chg, cls]) => (
-              <div key={name} className={`heat-cell ${cls}`}>
-                {name}
+            {(extras?.industry_heatmap ?? []).map((h) => (
+              <div key={h.name} className={`heat-cell ${heatCls(h.level)}`}>
+                {h.name}
                 <br />
-                {chg}
+                {h.change >= 0 ? '+' : ''}{h.change}%
               </div>
             ))}
           </div>
         </div>
         <div className="card">
           <div className="card-label">全市场异常速览</div>
+          {marketAlerts.slice(0, 2).map((a) => (
+            <div key={a.id} className={`alert-card ${a.level === 'critical' ? 'critical' : a.level}`} style={{ marginBottom: 8 }}>
+              <div className="alert-icon">{a.icon}</div>
+              <div className="alert-body">
+                <h4>{a.title}</h4>
+                <p>{a.description}</p>
+              </div>
+            </div>
+          ))}
           <span
             className="chart-tab"
             style={{ cursor: 'pointer', marginTop: 12, display: 'inline-block' }}
@@ -138,14 +155,14 @@ export function MarketView() {
             tabIndex={0}
             onClick={() => navigate('/app/alerts')}
           >
-            查看全部 5 条 →
+            查看全部 {alertCount} 条 →
           </span>
         </div>
       </div>
       <div className="card insight-block">
         <h3>💡 全市场投资建议</h3>
         <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.7, marginTop: 8 }}>
-          建议股票仓位 55%，超配 AI 算力与电力设备，不追涨。
+          {extras?.market_advice?.position} {extras?.market_advice?.direction} {extras?.market_advice?.action}
         </p>
       </div>
       <MarketIndexChart />

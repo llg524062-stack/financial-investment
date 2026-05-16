@@ -1,12 +1,14 @@
-import { useEffect } from 'react';
+import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Input } from 'antd';
+import { Input, message } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
-import { useDebounce } from '@/hooks/useDebounce';
 import { useAppStore } from '@/store/appStore';
 import { resolveSymbol } from '@/api/modules/market';
+import { syncSymbol } from '@/api/modules/sync';
 import { ScopeVisible } from '@/components/common/ScopeVisible';
 import styles from './index.module.less';
+
+const QUICK_SYMBOLS = ['NVDA', 'MSFT', 'AAPL', '600519'];
 
 export function AppTopbar() {
   const navigate = useNavigate();
@@ -15,15 +17,37 @@ export function AppTopbar() {
   const setSearchValue = useAppStore((s) => s.setSearchValue);
   const setScopeMarket = useAppStore((s) => s.setScopeMarket);
   const setScopeSymbol = useAppStore((s) => s.setScopeSymbol);
-  const debouncedSearch = useDebounce(searchValue, 300);
 
-  useEffect(() => {
-    const q = debouncedSearch.trim();
-    if (!q) return;
+  const commitSearch = useCallback(() => {
+    const q = searchValue.trim();
+    if (!q) {
+      setScopeMarket();
+      navigate('/app/dashboard');
+      return;
+    }
     void resolveSymbol(q).then((info) => {
-      if (info) setScopeSymbol(info.code, info.display);
+      if (!info) {
+        message.warning('未识别该代码，请尝试 NVDA、MSFT、600519 等');
+        return;
+      }
+      setScopeSymbol(info.code, info.display);
+      navigate('/app/dashboard');
+      message.success(`已切换到 ${info.display}`);
+      void syncSymbol(info.code).catch(() => {
+        message.info('后台正在同步行情，请稍后刷新页面');
+      });
     });
-  }, [debouncedSearch, setScopeSymbol]);
+  }, [searchValue, setScopeMarket, setScopeSymbol, navigate]);
+
+  const quickPick = (code: string) => {
+    void resolveSymbol(code).then((info) => {
+      if (info) {
+        setScopeSymbol(info.code, info.display);
+        navigate('/app/dashboard');
+        void syncSymbol(info.code).catch(() => undefined);
+      }
+    });
+  };
 
   return (
     <header className="topbar">
@@ -34,18 +58,15 @@ export function AppTopbar() {
           </span>
           <Input
             className={styles.searchInput}
-            placeholder="搜索股票代码或名称，留空=全市场概览…"
+            placeholder="输入代码或名称，回车切换标的（如 NVDA、600519）"
             value={searchValue}
-            onChange={(e) => {
-              const v = e.target.value;
-              setSearchValue(v);
-              if (!v.trim()) setScopeMarket();
-            }}
-            onPressEnter={() => {
-              if (searchValue.trim()) navigate('/app/dashboard');
-            }}
+            onChange={(e) => setSearchValue(e.target.value)}
+            onPressEnter={commitSearch}
             variant="borderless"
           />
+          <button type="button" className="search-clear" title="搜索" onClick={commitSearch}>
+            搜索
+          </button>
           {searchValue ? (
             <button
               type="button"
@@ -60,6 +81,18 @@ export function AppTopbar() {
             </button>
           ) : null}
         </div>
+        <div className="quick-picks" style={{ marginTop: 8 }}>
+          {QUICK_SYMBOLS.map((s) => (
+            <button
+              key={s}
+              type="button"
+              className={`quick-pick${currentSymbol === s ? ' active' : ''}`}
+              onClick={() => quickPick(s)}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
       </div>
       <div className="topbar-actions">
         <span className="scope-badge">
@@ -72,7 +105,7 @@ export function AppTopbar() {
         </span>
         <div className="watchlist-pill">
           <span className="dot" />
-          实时行情 · 延迟 0.3s
+          {currentSymbol ? `当前标的 ${currentSymbol}` : '全市场概览'}
         </div>
       </div>
     </header>
