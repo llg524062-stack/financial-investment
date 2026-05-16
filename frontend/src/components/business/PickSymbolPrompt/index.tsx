@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/appStore';
 import { fetchWatchlist } from '@/api/modules/market';
+import { asArray } from '@/utils/apiNormalize';
 import type { StockRowItem } from '@/types/market';
 
 const DEFAULT_PICKS = [
@@ -25,7 +26,9 @@ export function PickSymbolPrompt({
   const [rows, setRows] = useState<StockRowItem[]>([]);
 
   useEffect(() => {
-    void fetchWatchlist().then(setRows).catch(() => setRows([]));
+    void fetchWatchlist()
+      .then((w) => setRows(asArray<StockRowItem>(w)))
+      .catch(() => setRows([]));
   }, []);
 
   const pick = (code: string, name: string) => {

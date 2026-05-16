@@ -19,7 +19,9 @@ function MarketPageContent({ symbol }: { symbol: string }) {
 
   if (!data) return <PageLoading />;
 
-  const { ohlc, level2, options } = data;
+  const ohlc = data.ohlc;
+  const level2 = data.level2 ?? { bids: [], asks: [], source: 'unavailable' };
+  const options = Array.isArray(data.options) ? data.options : [];
   const fmt = (n: number) => (n >= 1000 ? n.toLocaleString() : n.toFixed(2));
 
   return (

@@ -1,21 +1,36 @@
 import { httpGet } from '@/api/request';
+import { asArray } from '@/utils/apiNormalize';
 import type { AlertItem, IndexCard, StockRowItem, SymbolInfo } from '@/types/market';
 
 export async function fetchIndexCards(): Promise<IndexCard[]> {
-  return httpGet<IndexCard[]>('/market/indices', { useCache: true });
+  try {
+    return asArray<IndexCard>(await httpGet<unknown>('/market/indices', { useCache: true }));
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchWatchlist(): Promise<StockRowItem[]> {
-  return httpGet<StockRowItem[]>('/market/watchlist');
+  try {
+    return asArray<StockRowItem>(await httpGet<unknown>('/market/watchlist'));
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchAlerts(
   scope: 'market' | 'symbol',
   symbol?: string | null,
 ): Promise<AlertItem[]> {
-  return httpGet<AlertItem[]>('/market/alerts', {
-    params: { scope, symbol: symbol ?? undefined },
-  });
+  try {
+    return asArray<AlertItem>(
+      await httpGet<unknown>('/market/alerts', {
+        params: { scope, symbol: symbol ?? undefined },
+      }),
+    );
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchIndexSeries(period: string) {

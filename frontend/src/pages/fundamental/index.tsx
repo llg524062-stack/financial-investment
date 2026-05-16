@@ -5,12 +5,22 @@ import { SymbolScopedPage } from '@/components/business/SymbolScopedPage';
 import { fetchFundamentalPage, type FundamentalPageData } from '@/api/modules/pages';
 import { useLineChart } from '@/hooks/useLineChart';
 import { DataSourceTag } from '@/components/common/DataSourceTag';
+import { asArray } from '@/utils/apiNormalize';
 
 function FinTable({ rows }: { rows: string[][] }) {
+  const safeRows = asArray<string[]>(rows);
   return (
     <table>
       <thead><tr><th>科目</th><th>数值</th><th>同比</th><th>说明</th></tr></thead>
-      <tbody>{rows.map((r) => <tr key={r[0]}>{r.map((c, i) => <td key={i}>{c}</td>)}</tr>)}</tbody>
+      <tbody>
+        {safeRows.map((r) => (
+          <tr key={r[0]}>
+            {asArray<string>(r).map((c, i) => (
+              <td key={i}>{c}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
     </table>
   );
 }

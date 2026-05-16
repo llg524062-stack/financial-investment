@@ -1,5 +1,14 @@
 import { httpGet } from '@/api/request';
+import { asArray } from '@/utils/apiNormalize';
 import type { MarketIndexPeriod } from '@/types/market';
+
+const EMPTY_INDEX_PERIOD: MarketIndexPeriod = {
+  labels: [],
+  sp500: [100],
+  nasdaq: [100],
+  csi300: [100],
+  insight: '暂无指数数据，请确认后端已同步',
+};
 
 export interface ForecastScenario {
   name: string;
@@ -60,5 +69,18 @@ export async function fetchSymbolQuotes(symbol: string, period = '3m'): Promise<
 }
 
 export async function fetchIndexSeries(period: string): Promise<MarketIndexPeriod> {
-  return httpGet<MarketIndexPeriod>('/market/index-series', { params: { period }, useCache: true });
+  try {
+    const raw = await httpGet<unknown>('/market/index-series', { params: { period }, useCache: true });
+    if (!raw || typeof raw !== 'object') return EMPTY_INDEX_PERIOD;
+    const p = raw as MarketIndexPeriod;
+    return {
+      labels: asArray(p.labels),
+      sp500: asArray(p.sp500, [100]),
+      nasdaq: asArray(p.nasdaq, [100]),
+      csi300: asArray(p.csi300, [100]),
+      insight: typeof p.insight === 'string' ? p.insight : EMPTY_INDEX_PERIOD.insight,
+    };
+  } catch {
+    return EMPTY_INDEX_PERIOD;
+  }
 }

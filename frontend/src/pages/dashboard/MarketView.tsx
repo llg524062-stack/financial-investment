@@ -79,14 +79,21 @@ export function MarketView() {
       <div className="market-hero">
         <h3>今天市场整体怎么样？</h3>
         <p>
-          大盘小幅上涨，科技板块偏强，但估值整体偏高。
-          <strong style={{ color: 'var(--text-primary)' }}>
-            适合持有优质仓位，新开仓宜精选、不宜追涨。
-          </strong>{' '}
-          点击下面任意股票可查看「值不值得买」的详细结论。
+          {extras?.market_advice?.direction ||
+            '数据来自后端同步；若指数均为 —，请查看顶部连接状态并触发全量同步。'}
+          <strong style={{ color: 'var(--text-primary)', display: 'block', marginTop: 8 }}>
+            {extras?.market_advice?.action || '点击自选股可查看个股投资结论。'}
+          </strong>
         </p>
       </div>
       <div className="bento bento-4">
+        {cards.length === 0 ? (
+          <div className="card" style={{ gridColumn: '1 / -1' }}>
+            <div className="card-label">指数行情</div>
+            <div className="card-value">—</div>
+            <div className="card-meta">未获取到指数数据，请确认后端已连接并完成同步</div>
+          </div>
+        ) : null}
         {cards.map((c) => (
           <div key={c.label} className="card">
             <div className="card-label">{c.label}</div>

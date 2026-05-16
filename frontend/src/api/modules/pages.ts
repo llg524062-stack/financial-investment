@@ -1,4 +1,39 @@
+import type { AxiosRequestConfig } from 'axios';
 import { httpGet, httpPut } from '@/api/request';
+import {
+  EMPTY_ALERTS_PAGE,
+  EMPTY_FUNDAMENTAL,
+  EMPTY_INSIGHTS_PAGE,
+  EMPTY_MACRO_PAGE,
+  EMPTY_MARKET_EXTRAS,
+  EMPTY_MARKET_PAGE,
+  EMPTY_NEWS_PAGE,
+  EMPTY_PORTFOLIO,
+  EMPTY_SETTINGS,
+  normalizeAlertsPage,
+  normalizeFundamentalPage,
+  normalizeInsightsPage,
+  normalizeMacroPage,
+  normalizeMarketExtras,
+  normalizeMarketPage,
+  normalizeNewsPage,
+  normalizePortfolio,
+  normalizeSettingsPage,
+} from '@/utils/pageNormalizers';
+
+async function safePageGet<T>(
+  url: string,
+  normalize: (raw: unknown) => T,
+  fallback: T,
+  config?: AxiosRequestConfig,
+): Promise<T> {
+  try {
+    const raw = await httpGet<unknown>(url, config);
+    return normalize(raw);
+  } catch {
+    return fallback;
+  }
+}
 
 export interface MarketPageData {
   symbol: string;
@@ -85,39 +120,51 @@ export interface MarketExtras {
 }
 
 export async function fetchMarketPage(symbol: string) {
-  return httpGet<MarketPageData>(`/pages/market/${symbol}`);
+  return safePageGet(`/pages/market/${symbol}`, normalizeMarketPage, {
+    ...EMPTY_MARKET_PAGE,
+    symbol: symbol.toUpperCase(),
+  });
 }
 
 export async function fetchFundamentalPage(symbol: string) {
-  return httpGet<FundamentalPageData>(`/pages/fundamental/${symbol}`);
+  return safePageGet(`/pages/fundamental/${symbol}`, normalizeFundamentalPage, {
+    ...EMPTY_FUNDAMENTAL,
+    symbol: symbol.toUpperCase(),
+  });
 }
 
 export async function fetchMacroPage() {
-  return httpGet<MacroPageData>('/pages/macro');
+  return safePageGet('/pages/macro', normalizeMacroPage, EMPTY_MACRO_PAGE);
 }
 
 export async function fetchNewsPage(symbol?: string) {
-  return httpGet<NewsPageData>('/pages/news', { params: symbol ? { symbol } : {} });
+  return safePageGet('/pages/news', normalizeNewsPage, EMPTY_NEWS_PAGE, {
+    params: symbol ? { symbol } : {},
+  });
 }
 
 export async function fetchInsightsPage(scope: string, symbol?: string) {
-  return httpGet<InsightsPageData>('/pages/insights', { params: { scope, symbol } });
+  return safePageGet('/pages/insights', normalizeInsightsPage, { ...EMPTY_INSIGHTS_PAGE, scope }, {
+    params: { scope, symbol },
+  });
 }
 
 export async function fetchAlertsPage(scope: string, symbol?: string) {
-  return httpGet<AlertsPageData>('/pages/alerts', { params: { scope, symbol } });
+  return safePageGet('/pages/alerts', normalizeAlertsPage, EMPTY_ALERTS_PAGE, {
+    params: { scope, symbol },
+  });
 }
 
 export async function fetchMarketExtras() {
-  return httpGet<MarketExtras>('/pages/dashboard/market-extras');
+  return safePageGet('/pages/dashboard/market-extras', normalizeMarketExtras, EMPTY_MARKET_EXTRAS);
 }
 
 export async function fetchSettingsPage() {
-  return httpGet<SettingsPageData>('/pages/settings');
+  return safePageGet('/pages/settings', normalizeSettingsPage, EMPTY_SETTINGS);
 }
 
 export async function fetchPortfolio() {
-  return httpGet<PortfolioData>('/pages/portfolio');
+  return safePageGet('/pages/portfolio', normalizePortfolio, EMPTY_PORTFOLIO);
 }
 
 export async function savePortfolio(data: PortfolioData) {
