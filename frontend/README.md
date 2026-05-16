@@ -76,12 +76,40 @@ frontend/
 
 ## Vercel 部署
 
+### 方式 A：仓库根目录部署（推荐，已配置根目录 `vercel.json`）
+
+直接连接 GitHub 仓库，**无需**改 Root Directory，推送后自动：
+
+- 构建：`cd frontend && npm run build`
+- 输出：`frontend/dist`
+- SPA 路由回退：`index.html`
+
+### 方式 B：仅部署 frontend 子目录
+
+在 Vercel 项目 **Settings → General**：
+
+| 配置项 | 值 |
+|--------|-----|
+| Root Directory | `frontend` |
+| Build Command | `npm run build` |
+| Output Directory | `dist` |
+| Framework Preset | Vite |
+
+### 访问地址
+
+- 首页 / 登录：`https://你的域名.vercel.app/` 或 `/login`
+- 中台（需先登录）：`https://你的域名.vercel.app/app/dashboard`
+
+### 404 排查
+
+1. **Vercel 自带 404 页**（黑底白字 NOT_FOUND）→ 构建产物路径不对，检查 Output 是否为 `frontend/dist` 或 Root 是否为 `frontend`
+2. **能打开首页，刷新子路由 404** → 确认 `vercel.json` 中 `rewrites` 已生效并重新 Deploy
+3. **构建失败** → Vercel → Deployments → 查看 Build Logs
+
 ```bash
 npm run build
-# 将 frontend 目录作为 Root Directory，Build: npm run build，Output: dist
+npm run preview   # 本地先验证 dist 是否正常
 ```
-
-`vercel.json` 已配置 SPA 重定向。
 
 ## 代码规范
 
