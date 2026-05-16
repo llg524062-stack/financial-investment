@@ -24,10 +24,21 @@ docker compose up --build
 
 ## 二、Railway 一键部署后端
 
+### 常见构建失败：`Failed to build an image`（约 7 秒失败）
+
+| 原因 | 处理 |
+|------|------|
+| **Root Directory 未设置** | 在 Railway 服务 **Settings → Root Directory** 填 `backend`，或留空使用仓库根目录 `Dockerfile` |
+| 部署了整个 monorepo 但无根 Dockerfile | 已提供根目录 `Dockerfile` + `railway.toml`，可直接从仓库根部署 |
+| `akshare` 编译依赖缺失 | `backend/Dockerfile` 已增加 `libxml2`、`g++` 等系统库 |
+| 健康检查在首次同步前超时 | 默认 `RUN_SYNC_ON_STARTUP=false`，部署成功后再在 Variables 改为 `true` |
+
+构建成功后：服务 **Settings → Networking → Generate Domain** 生成公网域名。
+
 1. 在 [Railway](https://railway.app) 新建项目 → **Deploy from GitHub** 选择本仓库
-2. 服务设置：
-   - **Root Directory**：`backend`
-   - 使用仓库内 `backend/railway.toml`（Dockerfile 构建）
+2. 服务设置（二选一）：
+   - **推荐**：**Root Directory** = `backend`（使用 `backend/Dockerfile`）
+   - **或**：Root Directory 留空（使用仓库根目录 `Dockerfile`，会自动 `COPY backend/`）
 3. 添加 **PostgreSQL** 插件，Railway 会自动注入 `DATABASE_URL`
 4. 环境变量（Variables）：
 

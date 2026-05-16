@@ -1,3 +1,4 @@
+# 仓库根目录部署后端（与根目录 Dockerfile 配套）
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"

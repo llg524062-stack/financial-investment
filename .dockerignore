@@ -1,0 +1,14 @@
+frontend/
+prototype/
+.git/
+**/.venv
+**/__pycache__
+**/*.pyc
+**/.env
+**/.env.*
+!backend/.env.example
+**/*.db-journal
+.cursor/
+**/.venv-test
+node_modules/
+frontend/dist/

@@ -2,6 +2,16 @@
 
 Python **FastAPI** 服务：从 AkShare / yfinance / FRED 拉取行情、基本面、宏观、资讯与分析师预期，写入 SQLite（可换 PostgreSQL），向前端提供 REST JSON。
 
+## Railway 部署
+
+1. Railway 新建服务 → 连接本 GitHub 仓库  
+2. **Settings → Root Directory** 填写 `backend`（推荐）  
+3. **Variables** 至少设置：`CORS_ORIGINS`、`WATCHLIST`；有 Postgres 时 Railway 会注入 `DATABASE_URL`  
+4. 首次部署保持 `RUN_SYNC_ON_STARTUP=false`（默认），部署成功并生成公网域名后，再改为 `true` 并执行 `POST /api/sync/run-now`  
+5. **Settings → Networking → Generate Domain** 获取公网 URL  
+
+若构建失败 `Failed to build an image`，请查看 Build Logs；多为 Root Directory 未指向 `backend` 或依赖编译失败（见根目录 `DEPLOY.md`）。
+
 ## 快速开始
 
 ```bash

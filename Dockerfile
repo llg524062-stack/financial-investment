@@ -1,8 +1,9 @@
+# 从仓库根目录部署 Railway 时使用（Root Directory 留空或设为 /）
+# 更推荐：Railway 服务 Settings → Root Directory = backend
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# akshare / pandas / lxml 编译依赖
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     g++ \
@@ -13,16 +14,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+COPY backend/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir --default-timeout=180 --retries 3 -r requirements.txt
 
-COPY app ./app
-COPY run.py .
+COPY backend/app ./app
+COPY backend/run.py ./run.py
 
 RUN mkdir -p /app/data
 
 ENV PYTHONUNBUFFERED=1
-# 首次部署建议 false，避免健康检查在同步完成前失败；稳定后改为 true
 ENV RUN_SYNC_ON_STARTUP=false
 
 EXPOSE 8000
