@@ -23,7 +23,7 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql+psycopg2://finance:finance@db:5432/finance
-      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,https://financial-investment-one.vercel.app
+      CORS_ORIGINS: "http://localhost:5173,http://127.0.0.1:5173,https://financial-investment-one.vercel.app"
       WATCHLIST: NVDA,MSFT,AAPL,TSLA,600519
       RUN_SYNC_ON_STARTUP: "true"
       FRED_API_KEY: ${FRED_API_KEY:-}

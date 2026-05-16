@@ -7,7 +7,11 @@ class Settings(BaseSettings):
 
     app_host: str = "0.0.0.0"
     app_port: int = 8000
-    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+    cors_origins: str = (
+        "http://localhost:5173,"
+        "http://127.0.0.1:5173,"
+        "https://financial-investment-one.vercel.app"
+    )
 
     database_url: str = "sqlite:///./data/finance.db"
     watchlist: str = "NVDA,MSFT,AAPL,TSLA,600519"

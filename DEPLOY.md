@@ -89,7 +89,12 @@ VITE_API_BASE_URL=https://你的Railway服务.up.railway.app/api
 
 ## 六、常见问题
 
+- **页面显示「后端未连通 — Network Error」**（浏览器里多个红色 Network Error）：
+  1. 在 Railway **Networking** 点击 **Generate Domain**，用浏览器直接打开 `https://xxx.up.railway.app/api/health`，应返回 JSON
+  2. Variables 设置 `CORS_ORIGINS=https://financial-investment-one.vercel.app,http://localhost:5173`（**无尾斜杠**），保存后 **Redeploy 后端**
+  3. Vercel 设置 `VITE_API_BASE_URL=https://xxx.up.railway.app/api` 后 **Redeploy 前端**
+  4. 后端代码已默认放行 `https://*.vercel.app`；若 Railway 里仍只配了 localhost，请按上一步覆盖
 - **前端空白 / 接口 404**：检查 `VITE_API_BASE_URL` 是否以 `/api` 结尾
-- **CORS 错误**：后端 `CORS_ORIGINS` 必须包含 Vercel 域名（无尾斜杠）
-- **无行情数据**：调用 `POST /api/sync/run-now`，查看 Railway 日志中 AkShare/yfinance 报错
+- **CORS 错误**：同上；开发者工具 Network 里 OPTIONS 请求若失败，即为 CORS
+- **无行情数据**：连通后调用 `POST /api/sync/run-now`，查看 Railway 日志中 AkShare/yfinance 报错
 - **Railway 端口**：平台注入 `PORT`，`railway.toml` 的 `startCommand` 已使用 `$PORT`

@@ -53,12 +53,19 @@ def create_app() -> FastAPI:
         version="1.0.0",
         lifespan=lifespan,
     )
+    # 生产环境务必在 Railway 设置 CORS_ORIGINS；同时放行 *.vercel.app 预览域名
+    cors_origins = settings.cors_origin_list or [
+        "http://localhost:5173",
+        "https://financial-investment-one.vercel.app",
+    ]
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.cors_origin_list or ["*"],
-        allow_credentials=True,
+        allow_origins=cors_origins,
+        allow_origin_regex=r"https://.*\.vercel\.app",
+        allow_credentials=False,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["*"],
     )
 
     api = APIRouter(prefix="/api")

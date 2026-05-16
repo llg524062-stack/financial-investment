@@ -1,4 +1,4 @@
-import { httpGet } from '@/api/request';
+import { API_BASE_URL, httpGet } from '@/api/request';
 import { asArray } from '@/utils/apiNormalize';
 
 export type BackendProbeState = 'checking' | 'misconfigured' | 'offline' | 'empty' | 'ready';
@@ -11,14 +11,14 @@ export interface BackendProbeResult {
 }
 
 export function getConfiguredApiBase(): string {
-  return import.meta.env.VITE_API_BASE_URL || '/api';
+  return API_BASE_URL;
 }
 
 /** 检测前端是否已正确对接 Railway 后端 */
 export async function probeBackend(): Promise<BackendProbeResult> {
   const apiBase = getConfiguredApiBase();
 
-  if (!import.meta.env.DEV && (apiBase === '/api' || apiBase.startsWith('/'))) {
+  if (!import.meta.env.DEV && (apiBase === '/api' || !apiBase.startsWith('http'))) {
     return {
       state: 'misconfigured',
       apiBase,
@@ -29,8 +29,8 @@ export async function probeBackend(): Promise<BackendProbeResult> {
   }
 
   try {
-    await httpGet<{ status: string }>('/health');
-    const watchlist = asArray<{ symbol: string }>(await httpGet<unknown>('/market/watchlist'));
+    await httpGet<{ status: string }>('/health', { silent: true });
+    const watchlist = asArray<{ symbol: string }>(await httpGet<unknown>('/market/watchlist', { silent: true }));
     if (watchlist.length === 0) {
       return {
         state: 'empty',
@@ -46,14 +46,17 @@ export async function probeBackend(): Promise<BackendProbeResult> {
       message: `后端已连通，已加载 ${watchlist.length} 只自选股`,
     };
   } catch (err) {
+    const hint =
+      err instanceof Error && err.message.includes('CORS')
+        ? err.message
+        : err instanceof Error
+          ? err.message
+          : '无法访问后端 API';
     return {
       state: 'offline',
       apiBase,
       watchlistCount: 0,
-      message:
-        err instanceof Error
-          ? err.message
-          : '无法访问后端 API，请检查 Railway 是否运行、CORS 是否包含 financial-investment-one.vercel.app',
+      message: `${hint}。请在 Railway 设置 CORS_ORIGINS=https://financial-investment-one.vercel.app 并 Redeploy 后端`,
     };
   }
 }
