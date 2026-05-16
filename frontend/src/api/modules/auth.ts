@@ -1,4 +1,4 @@
-import { MOCK_DELAY_MS } from '@/utils/constants';
+import { DEMO_PASSWORD, DEMO_USERNAME, MOCK_DELAY_MS } from '@/utils/constants';
 import type { LoginFormValues, LoginResult, UserInfo } from '@/types/user';
 import type { ApiResponse } from '@/types/api';
 
@@ -15,19 +15,31 @@ function delay<T>(data: T): Promise<T> {
   return new Promise((resolve) => setTimeout(() => resolve(data), MOCK_DELAY_MS));
 }
 
-/** Login — swap mock with httpPost('/auth/login', values) for production */
+/** Login — swap mock with httpPost('/auth/login', values) when VITE_USE_MOCK=false */
 export async function loginApi(values: LoginFormValues): Promise<LoginResult> {
-  if (import.meta.env.VITE_USE_MOCK !== 'false') {
-    if (!values.username || !values.password) {
+  const useMock = import.meta.env.VITE_USE_MOCK !== 'false';
+
+  if (useMock) {
+    if (!values.username?.trim() || !values.password?.trim()) {
       throw new Error('请输入用户名和密码');
+    }
+    const user = values.username.trim();
+    const pass = values.password.trim();
+    if (user !== DEMO_USERNAME || pass !== DEMO_PASSWORD) {
+      throw new Error(`演示账号：${DEMO_USERNAME} / ${DEMO_PASSWORD}`);
     }
     return delay({
       token: 'mock-jwt-token-' + Date.now(),
-      user: { ...MOCK_USER, username: values.username },
+      user: { ...MOCK_USER, username: user },
     });
   }
-  const { httpPost } = await import('@/api/request');
-  return httpPost<LoginResult>('/auth/login', values);
+
+  try {
+    const { httpPost } = await import('@/api/request');
+    return await httpPost<LoginResult>('/auth/login', values);
+  } catch {
+    throw new Error('登录服务不可用，请确认后端 API 或联系管理员');
+  }
 }
 
 export async function logoutApi(): Promise<void> {

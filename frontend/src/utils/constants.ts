@@ -2,6 +2,10 @@
 
 export const APP_TITLE = 'gll-金融投资指挥中台';
 
+/** Mock / 演示环境默认登录账号（对接真实后端后可移除） */
+export const DEMO_USERNAME = 'admin';
+export const DEMO_PASSWORD = 'gll123456';
+
 export const DEFAULT_PAGE_SIZE = 10;
 export const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
