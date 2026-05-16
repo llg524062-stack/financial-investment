@@ -1,0 +1,2802 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gll-金融投资指挥中台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-base: #0a0e17;
+      --bg-elevated: rgba(15, 23, 42, 0.6);
+      --bg-card: rgba(15, 23, 42, 0.5);
+      --border: rgba(51, 65, 85, 0.5);
+      --border-hover: rgba(71, 85, 105, 0.6);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-tertiary: #64748b;
+      --accent: #10b981;
+      --accent-dim: rgba(16, 185, 129, 0.12);
+      --danger: #ef4444;
+      --danger-dim: rgba(239, 68, 68, 0.12);
+      --warning: #f59e0b;
+      --warning-dim: rgba(245, 158, 11, 0.12);
+      --info: #3b82f6;
+      --info-dim: rgba(59, 130, 246, 0.12);
+      --purple: #a78bfa;
+      --sidebar-w: 240px;
+      --radius: 12px;
+      --radius-lg: 16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 14px;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Ambient background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(16, 185, 129, 0.08), transparent),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(59, 130, 246, 0.06), transparent);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app {
+      display: flex;
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      border-right: 1px solid var(--border);
+      background: rgba(10, 14, 23, 0.85);
+      backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo h1 {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--accent), #059669);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .logo span { color: var(--text-secondary); font-weight: 400; font-size: 11px; display: block; margin-top: 2px; }
+
+    .nav { padding: 12px; flex: 1; overflow-y: auto; }
+
+    .nav-section {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-tertiary);
+      padding: 12px 12px 6px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 13px;
+      font-weight: 500;
+      border: 1px solid transparent;
+    }
+
+    .nav-item:hover {
+      background: rgba(30, 41, 59, 0.5);
+      color: var(--text-primary);
+    }
+
+    .nav-item.active {
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-color: rgba(16, 185, 129, 0.2);
+    }
+
+    .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+
+    .sidebar-footer {
+      padding: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .data-sovereignty {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      padding: 10px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .data-sovereignty strong { color: var(--accent); display: block; margin-bottom: 4px; font-size: 11px; }
+
+    /* Main */
+    .main {
+      flex: 1;
+      margin-left: var(--sidebar-w);
+      min-width: 0;
+    }
+
+    /* Top bar */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10, 14, 23, 0.75);
+      backdrop-filter: blur(12px);
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      flex: 1;
+      max-width: 360px;
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 8px 12px 8px 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-box input:focus { border-color: rgba(16, 185, 129, 0.4); }
+    .search-box input::placeholder { color: var(--text-tertiary); }
+    .search-box .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary); font-size: 14px; z-index: 1; }
+    .search-inner { flex: 1; position: relative; }
+    .search-inner input { width: 100%; }
+
+    .topbar-actions { display: flex; align-items: center; gap: 12px; }
+
+    /* Signal / Noise toggle */
+    .mode-toggle {
+      display: flex;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 3px;
+    }
+
+    .mode-btn {
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .mode-btn.active {
+      background: var(--accent);
+      color: #0a0e17;
+    }
+
+    .mode-btn:not(.active):hover { color: var(--text-primary); }
+
+    .watchlist-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .watchlist-pill .dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: pulse 2s infinite; }
+
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    .content {
+      padding: 24px;
+      padding-bottom: 48px;
+      min-height: calc(100vh - 56px);
+      overflow: visible;
+    }
+
+    .panel { display: none; overflow: visible; }
+    .panel.active { display: block; }
+
+    /* Section headers */
+    .section-header {
+      margin-bottom: 20px;
+    }
+
+    .section-header h2 {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .section-header p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    /* Bento grid */
+    .bento {
+      display: grid;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .bento-4 { grid-template-columns: repeat(4, 1fr); }
+    .bento-3 { grid-template-columns: repeat(3, 1fr); }
+    .bento-2-1 { grid-template-columns: 2fr 1fr; }
+    .bento-1-2 { grid-template-columns: 1fr 2fr; }
+    .bento-2 { grid-template-columns: repeat(2, 1fr); }
+
+    @media (max-width: 1200px) {
+      .bento-4 { grid-template-columns: repeat(2, 1fr); }
+      .bento-3, .bento-2-1, .bento-1-2 { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .main { margin-left: 0; }
+      .bento-4, .bento-2 { grid-template-columns: 1fr; }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      border-color: var(--border-hover);
+      background: rgba(15, 23, 42, 0.65);
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset-inline: 0;
+      top: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.2), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .card:hover::before { opacity: 1; }
+
+    .card.span-2 { grid-column: span 2; }
+    .card.span-3 { grid-column: span 3; }
+    .card.span-4 { grid-column: span 4; }
+
+    @media (max-width: 1200px) {
+      .card.span-2, .card.span-3, .card.span-4 { grid-column: span 1; }
+    }
+
+    .card-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      letter-spacing: -0.01em;
+    }
+
+    .card-value {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-top: 6px;
+    }
+
+    .card-meta {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 4px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 999px;
+      margin-left: 8px;
+    }
+
+    .badge-up { background: var(--accent-dim); color: var(--accent); }
+    .badge-down { background: var(--danger-dim); color: var(--danger); }
+    .badge-neutral { background: rgba(148, 163, 184, 0.12); color: var(--text-secondary); }
+    .badge-warn { background: var(--warning-dim); color: var(--warning); }
+    .badge-info { background: var(--info-dim); color: var(--info); }
+
+    /* Chart placeholder */
+    .chart-area {
+      height: 200px;
+      margin-top: 16px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: var(--radius);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chart-area.tall { height: 280px; }
+    .chart-area.index-chart-area { height: 260px; }
+
+    .chart-area canvas { width: 100%; height: 100%; display: block; }
+
+    .index-chart-card .card-header { margin-bottom: 4px; }
+    .index-chart-sub { font-size: 12px; color: var(--text-tertiary); margin-top: 4px; }
+
+    .index-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0 4px;
+    }
+
+    .index-legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: rgba(30, 41, 59, 0.45);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+
+    .index-legend-item .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .index-legend-item.active {
+      color: var(--text-primary);
+      border-color: var(--border-hover);
+      background: rgba(30, 41, 59, 0.75);
+    }
+
+    .index-legend-item:not(.active) { opacity: 0.45; }
+
+    .index-stat-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 640px) {
+      .index-stat-row { grid-template-columns: 1fr; }
+    }
+
+    .index-stat {
+      padding: 12px 14px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .index-stat .name { font-size: 11px; color: var(--text-tertiary); margin-bottom: 4px; }
+    .index-stat .val { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .index-stat .chg { font-size: 12px; margin-top: 2px; }
+
+    .index-insight { margin-top: 12px; font-size: 13px; line-height: 1.65; }
+
+    .chart-tabs {
+      display: flex;
+      gap: 4px;
+      margin-top: 12px;
+    }
+
+    .chart-tab {
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .chart-tab.active, .chart-tab:hover {
+      background: var(--accent-dim);
+      border-color: rgba(16, 185, 129, 0.3);
+      color: var(--accent);
+    }
+
+    /* Tables */
+    .table-wrap { overflow-x: auto; margin-top: 12px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      font-weight: 500;
+      color: var(--text-tertiary);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    tr:hover td { background: rgba(30, 41, 59, 0.3); }
+
+    .num-up { color: var(--accent); }
+    .num-down { color: var(--danger); }
+
+    /* AI Insight panel */
+    .ai-panel {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(59, 130, 246, 0.06));
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .ai-panel-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .ai-avatar {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--info));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .ai-panel-header h3 { font-size: 14px; font-weight: 600; }
+    .ai-panel-header span { font-size: 11px; color: var(--text-tertiary); }
+
+    .ai-verdict {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .verdict-score {
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--accent);
+    }
+
+    .verdict-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .verdict-label strong {
+      display: block;
+      font-size: 16px;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+
+    .ai-points {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .ai-points { grid-template-columns: 1fr; }
+    }
+
+    .ai-point {
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: var(--radius);
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .ai-point strong { color: var(--text-primary); display: block; margin-bottom: 4px; font-size: 12px; }
+
+    /* News feed */
+    .news-feed { max-height: 360px; overflow-y: auto; }
+
+    .news-item {
+      display: flex;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.2s;
+    }
+
+    .news-item:hover { background: rgba(30, 41, 59, 0.2); margin: 0 -12px; padding-left: 12px; padding-right: 12px; border-radius: var(--radius); }
+
+    .news-time {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      white-space: nowrap;
+      min-width: 48px;
+    }
+
+    .news-tag {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+
+    .tag-announce { background: var(--info-dim); color: var(--info); }
+    .tag-macro { background: var(--warning-dim); color: var(--warning); }
+    .tag-flash { background: var(--danger-dim); color: var(--danger); }
+    .tag-signal { background: var(--accent-dim); color: var(--accent); }
+
+    .news-title { font-size: 13px; color: var(--text-primary); flex: 1; }
+
+    /* Order book mock */
+    .order-book { font-size: 11px; font-variant-numeric: tabular-nums; }
+    .ob-row { display: flex; justify-content: space-between; padding: 3px 0; position: relative; }
+    .ob-bar { position: absolute; top: 0; bottom: 0; opacity: 0.15; }
+    .ob-bar.bid { right: 0; background: var(--accent); }
+    .ob-bar.ask { left: 0; background: var(--danger); }
+    .ob-bid { color: var(--accent); }
+    .ob-ask { color: var(--danger); }
+
+    /* Options chain */
+    .options-strike { text-align: center; font-weight: 600; color: var(--text-secondary); }
+
+    /* Macro gauges */
+    .gauge-row { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; }
+    .gauge {
+      flex: 1;
+      min-width: 120px;
+      text-align: center;
+    }
+    .gauge-ring {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 8px;
+      border-radius: 50%;
+      background: conic-gradient(var(--accent) calc(var(--pct) * 1%), rgba(51,65,85,0.5) 0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .gauge-ring::after {
+      content: attr(data-val);
+      position: absolute;
+      inset: 6px;
+      background: var(--bg-base);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .gauge label { font-size: 11px; color: var(--text-tertiary); }
+
+    /* Heatmap */
+    .heatmap {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 4px;
+      margin-top: 12px;
+    }
+    .heat-cell {
+      aspect-ratio: 1.2;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 500;
+      padding: 4px;
+      text-align: center;
+    }
+    .heat-up-3 { background: rgba(16,185,129,0.5); }
+    .heat-up-2 { background: rgba(16,185,129,0.35); }
+    .heat-up-1 { background: rgba(16,185,129,0.2); }
+    .heat-flat { background: rgba(51,65,85,0.4); }
+    .heat-down-1 { background: rgba(239,68,68,0.2); }
+    .heat-down-2 { background: rgba(239,68,68,0.35); }
+    .heat-down-3 { background: rgba(239,68,68,0.5); }
+
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 4px;
+    }
+
+    .card-actions { display: flex; gap: 6px; }
+
+    .icon-btn {
+      width: 28px;
+      height: 28px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .icon-btn:hover { background: rgba(30,41,59,0.5); color: var(--text-primary); }
+
+    /* Tabs within panel */
+    .sub-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0;
+    }
+
+    .sub-tab {
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .sub-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .sub-tab:hover { color: var(--text-primary); }
+
+    .sub-panel { display: none; }
+    .sub-panel.active { display: block; }
+
+    /* Timeline */
+    .timeline { margin-top: 12px; }
+    .tl-item {
+      display: flex;
+      gap: 12px;
+      padding: 10px 0;
+      border-left: 2px solid var(--border);
+      margin-left: 8px;
+      padding-left: 16px;
+      position: relative;
+    }
+    .tl-item::before {
+      content: '';
+      position: absolute;
+      left: -5px;
+      top: 14px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+    .tl-date { font-size: 11px; color: var(--text-tertiary); min-width: 72px; }
+    .tl-content { font-size: 12px; color: var(--text-secondary); }
+    .tl-content strong { color: var(--text-primary); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ===== 全市场 / 个股 双态 ===== */
+    body.scope-market .scope-symbol-only { display: none !important; }
+    body.scope-symbol .scope-market-only { display: none !important; }
+    body.scope-market #ai-main-tabs .sub-tab[data-sub="ai-watchlist"] { display: none; }
+
+    .scope-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: var(--radius);
+      font-size: 12px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+    }
+
+    body.scope-market .scope-badge { border-color: rgba(59, 130, 246, 0.35); color: var(--info); }
+    body.scope-symbol .scope-badge { border-color: rgba(16, 185, 129, 0.35); color: var(--accent); }
+
+    .search-box { display: flex; align-items: center; gap: 8px; max-width: 420px; flex: 1; }
+    .search-box .search-inner { flex: 1; position: relative; }
+    .search-clear {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(51, 65, 85, 0.6);
+      border: none;
+      color: var(--text-secondary);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      display: none;
+    }
+
+    body.scope-symbol .search-clear { display: flex; align-items: center; justify-content: center; }
+    body.scope-symbol .search-box input { padding-right: 32px; }
+
+    .quick-picks {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .quick-pick {
+      padding: 6px 12px;
+      font-size: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .quick-pick:hover { border-color: var(--accent); color: var(--accent); }
+
+    .stock-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .stock-row:hover { background: rgba(30, 41, 59, 0.35); }
+    .stock-row .sym { font-weight: 600; min-width: 48px; }
+    .stock-row .name { flex: 1; color: var(--text-secondary); font-size: 12px; }
+    .stock-row .chg { font-variant-numeric: tabular-nums; font-size: 13px; }
+    .stock-row .score { font-size: 12px; min-width: 64px; text-align: right; }
+
+    .market-hero {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(16, 185, 129, 0.08));
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: var(--radius-lg);
+      padding: 24px 28px;
+      margin-bottom: 24px;
+    }
+
+    .market-hero h3 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+    .market-hero p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+
+    .hero-verdict {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(59, 130, 246, 0.08));
+      border: 2px solid rgba(16, 185, 129, 0.35);
+      border-radius: 20px;
+      padding: 28px 32px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .hero-verdict .question {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .hero-verdict .answer {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .hero-verdict .answer.caution { color: var(--warning); }
+    .hero-verdict .answer.avoid { color: var(--danger); }
+
+    .hero-verdict .summary {
+      font-size: 15px;
+      color: var(--text-primary);
+      max-width: 640px;
+      margin: 0 auto 16px;
+      line-height: 1.6;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .action-chip {
+      padding: 10px 18px;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 13px;
+      text-align: left;
+    }
+
+    .action-chip strong { display: block; color: var(--text-primary); margin-bottom: 2px; font-size: 12px; }
+    .action-chip span { color: var(--text-secondary); font-size: 12px; }
+
+    .plain-box {
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 12px;
+      line-height: 1.6;
+    }
+
+    .plain-box strong { color: var(--info); }
+
+    .alert-card {
+      display: flex;
+      gap: 14px;
+      padding: 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 12px;
+      align-items: flex-start;
+    }
+
+    .alert-card.critical { border-color: rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.06); }
+    .alert-card.warning { border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.06); }
+    .alert-card.info { border-color: rgba(59, 130, 246, 0.3); }
+
+    .alert-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .alert-card.critical .alert-icon { background: var(--danger-dim); }
+    .alert-card.warning .alert-icon { background: var(--warning-dim); }
+    .alert-card.info .alert-icon { background: var(--info-dim); }
+
+    .alert-body h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .alert-body p { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+    .alert-body .what-to-do { margin-top: 8px; font-size: 12px; color: var(--accent); }
+
+    .checklist { list-style: none; margin-top: 12px; }
+    .checklist li {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .checklist li::before {
+      content: '○';
+      color: var(--accent);
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .checklist li.done::before { content: '✓'; }
+
+    .term-tip {
+      border-bottom: 1px dashed var(--text-tertiary);
+      cursor: help;
+      position: relative;
+    }
+
+    .score-bar {
+      height: 8px;
+      background: rgba(51, 65, 85, 0.5);
+      border-radius: 4px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--danger), var(--warning), var(--accent));
+    }
+
+    .dim-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 900px) { .dim-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .dim-item {
+      text-align: center;
+      padding: 12px;
+      background: rgba(0,0,0,0.2);
+      border-radius: var(--radius);
+    }
+
+    .dim-item .dim-score { font-size: 20px; font-weight: 700; }
+    .dim-item .dim-label { font-size: 11px; color: var(--text-tertiary); margin-top: 4px; }
+    .dim-item .dim-plain { font-size: 11px; color: var(--text-secondary); margin-top: 6px; }
+
+    /* 数据源细化 */
+    .ds-category {
+      margin-bottom: 28px;
+    }
+
+    .ds-category-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ds-category-header h3 { font-size: 15px; font-weight: 600; }
+    .ds-category-header p { font-size: 12px; color: var(--text-tertiary); flex: 1; }
+
+    .ds-table td:first-child { font-weight: 500; color: var(--text-primary); white-space: nowrap; }
+    .ds-table .col-metric { color: var(--text-secondary); max-width: 200px; }
+    .ds-tag {
+      display: inline-block;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-right: 4px;
+    }
+    .ds-free { background: var(--accent-dim); color: var(--accent); }
+    .ds-paid { background: var(--warning-dim); color: var(--warning); }
+    .ds-cn { background: var(--info-dim); color: var(--info); }
+    .ds-us { background: rgba(167, 139, 250, 0.15); color: var(--purple); }
+
+    .trend-simple {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 20px;
+      flex-wrap: wrap;
+    }
+
+    .trend-big {
+      font-size: 48px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .trend-big.up { color: var(--accent); }
+    .trend-big.down { color: var(--danger); }
+
+    .trend-desc { flex: 1; min-width: 200px; }
+    .trend-desc h4 { font-size: 16px; margin-bottom: 6px; }
+    .trend-desc p { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+
+    .news-item { cursor: pointer; }
+    .news-item a.news-link {
+      color: inherit;
+      text-decoration: none;
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .news-item a.news-link:hover .news-title { color: var(--accent); }
+    .news-item .link-out {
+      font-size: 10px;
+      color: var(--text-tertiary);
+      flex-shrink: 0;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .news-item:hover .link-out { opacity: 1; }
+
+    .insight-block {
+      margin-bottom: 24px;
+    }
+    .insight-block h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .history-timeline .tl-item::before { background: var(--info); }
+
+  </style>
+</head>
+<body class="scope-market">
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo">
+        <h1><span class="logo-icon">◈</span> gll-金融投资指挥中台</h1>
+        <span>Financial Investment Command</span>
+      </div>
+      <nav class="nav">
+        <div class="nav-section">先看这些</div>
+        <div class="nav-item active" data-panel="dashboard">
+          <span class="icon">◎</span> 投资结论
+        </div>
+        <div class="nav-item" data-panel="alerts">
+          <span class="icon">⚡</span> 异常提醒
+          <span class="badge badge-warn scope-market-only" style="margin-left:auto;font-size:10px">5</span><span class="badge badge-warn scope-symbol-only" style="margin-left:auto;font-size:10px">3</span>
+        </div>
+        <div class="nav-item" data-panel="ai-insights">
+          <span class="icon">✦</span> 深度分析
+        </div>
+        <div class="nav-section">数据模块</div>
+        <div class="nav-item" data-panel="market">
+          <span class="icon">📈</span> 行情数据
+        </div>
+        <div class="nav-item" data-panel="fundamental">
+          <span class="icon">📊</span> 基本面财务
+        </div>
+        <div class="nav-item" data-panel="macro">
+          <span class="icon">🌐</span> 宏观与行业
+        </div>
+        <div class="nav-item" data-panel="news">
+          <span class="icon">📰</span> 资讯与舆情
+        </div>
+        <div class="nav-section">工具</div>
+        <div class="nav-item" data-panel="portfolio-sim">
+          <span class="icon">🧮</span> 收益模拟器
+        </div>
+        <div class="nav-item" data-panel="settings">
+          <span class="icon">⚙</span> 数据源百科
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <header class="topbar">
+        <div class="search-box">
+          <div class="search-inner">
+            <span class="search-icon">⌕</span>
+            <input type="text" id="symbol-search" placeholder="搜索股票代码或名称，留空=全市场概览…" value="" autocomplete="off" />
+            <button type="button" class="search-clear" id="search-clear" title="返回全市场">×</button>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <span class="scope-badge" id="scope-badge">
+            <span class="scope-market-only">◎ 全市场</span>
+            <span class="scope-symbol-only">◈ <span id="scope-symbol-label">NVDA</span></span>
+          </span>
+          <div class="watchlist-pill">
+            <span class="dot"></span>
+            实时行情 · 延迟 0.3s
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+        <!-- ========== DASHBOARD ========== -->
+        <section id="dashboard" class="panel active">
+          <div class="section-header scope-market-only">
+            <h2>市场总览</h2>
+            <p>全市场扫描 — 指数、行业、宏观环境、自选股雷达与投资建议</p>
+          </div>
+          <div class="section-header scope-symbol-only">
+            <h2>投资结论</h2>
+            <p>投资建议、历史回顾、未来预测与完整行情数据</p>
+          </div>
+
+          <!-- ========== 全市场模式 ========== -->
+          <div class="scope-market-only">
+            <div class="market-hero">
+              <h3>今天市场整体怎么样？</h3>
+              <p>大盘小幅上涨，科技板块偏强，但估值整体偏高。<strong style="color:var(--text-primary)">适合持有优质仓位，新开仓宜精选、不宜追涨。</strong> 点击下面任意股票可查看「值不值得买」的详细结论。</p>
+            </div>
+
+            <div class="bento bento-4">
+              <div class="card"><div class="card-label">标普 500</div><div class="card-value">5,842 <span class="badge badge-up">+0.6%</span></div><div class="card-meta">美股大盘 · 温和上涨</div></div>
+              <div class="card"><div class="card-label">纳斯达克</div><div class="card-value">18,456 <span class="badge badge-up">+0.9%</span></div><div class="card-meta">科技股偏强</div></div>
+              <div class="card"><div class="card-label">沪深 300</div><div class="card-value">3,892 <span class="badge badge-up">+0.3%</span></div><div class="card-meta">A股 · 震荡偏多</div></div>
+              <div class="card"><div class="card-label">市场温度</div><div class="card-value">62 <span class="badge badge-warn">偏热</span></div><div class="card-meta">综合估值与情绪</div></div>
+            </div>
+
+            <div class="card" style="margin-bottom:24px">
+              <div class="card-label">大环境一句话</div>
+              <div class="dim-grid">
+                <div class="dim-item"><div class="dim-score" style="color:var(--warning)">62</div><div class="dim-label">适合买股票吗</div><div class="dim-plain">可以参与，控制仓位</div></div>
+                <div class="dim-item"><div class="dim-score" style="color:var(--accent)">55%</div><div class="dim-label">建议股票仓位</div><div class="dim-plain">中性偏积极</div></div>
+                <div class="dim-item"><div class="dim-score" style="color:var(--accent)">78</div><div class="dim-label">最佳方向</div><div class="dim-plain">AI算力、电力设备</div></div>
+                <div class="dim-item"><div class="dim-score" style="color:var(--danger)">35</div><div class="dim-label">建议回避</div><div class="dim-plain">地产链、高估值题材</div></div>
+              </div>
+            </div>
+
+            <div class="card" style="margin-bottom:24px">
+              <div class="card-header">
+                <div class="card-label">自选股雷达 · 点击深入分析</div>
+                <span class="card-meta">共 6 只 · 2 只触发异常</span>
+              </div>
+              <div class="quick-picks">
+                <button type="button" class="quick-pick" data-symbol="NVDA">NVDA</button>
+                <button type="button" class="quick-pick" data-symbol="MSFT">MSFT</button>
+                <button type="button" class="quick-pick" data-symbol="AAPL">AAPL</button>
+                <button type="button" class="quick-pick" data-symbol="600519">贵州茅台</button>
+              </div>
+              <div class="stock-row" data-symbol="NVDA" data-name="英伟达">
+                <span class="sym">NVDA</span><span class="name">英伟达</span>
+                <span class="chg num-up">+2.3%</span>
+                <span class="score"><span class="badge badge-warn">72 谨慎偏多</span></span>
+              </div>
+              <div class="stock-row" data-symbol="MSFT" data-name="微软">
+                <span class="sym">MSFT</span><span class="name">微软</span>
+                <span class="chg num-up">+1.1%</span>
+                <span class="score"><span class="badge badge-up">78 偏多</span></span>
+              </div>
+              <div class="stock-row" data-symbol="AAPL" data-name="苹果">
+                <span class="sym">AAPL</span><span class="name">苹果</span>
+                <span class="chg num-down">-0.4%</span>
+                <span class="score"><span class="badge badge-neutral">65 中性</span></span>
+              </div>
+              <div class="stock-row" data-symbol="TSLA" data-name="特斯拉">
+                <span class="sym">TSLA</span><span class="name">特斯拉</span>
+                <span class="chg num-down">-3.2%</span>
+                <span class="score"><span class="badge badge-down">48 观望</span></span>
+              </div>
+            </div>
+
+            <div class="bento bento-2">
+              <div class="card">
+                <div class="card-label">今日行业涨跌</div>
+                <div class="heatmap" style="grid-template-columns:repeat(4,1fr)">
+                  <div class="heat-cell heat-up-3">半导体<br>+2.1%</div>
+                  <div class="heat-cell heat-up-2">AI软件<br>+1.5%</div>
+                  <div class="heat-cell heat-up-1">电力<br>+0.8%</div>
+                  <div class="heat-cell heat-flat">消费<br>0.0%</div>
+                  <div class="heat-cell heat-down-1">医药<br>-0.6%</div>
+                  <div class="heat-cell heat-down-2">地产<br>-1.8%</div>
+                  <div class="heat-cell heat-down-1">银行<br>-0.5%</div>
+                  <div class="heat-cell heat-up-1">能源<br>+0.4%</div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-label">全市场异常速览</div>
+                <div class="alert-card warning" style="margin-bottom:8px">
+                  <div class="alert-icon">⚠</div>
+                  <div class="alert-body"><h4>VIX 单周升 8%</h4><p>整体波动加大，注意仓位。</p></div>
+                </div>
+                <div class="alert-card info">
+                  <div class="alert-icon">ℹ</div>
+                  <div class="alert-body"><h4>5/22 美联储会议纪要</h4><p>宏观事件，科技股或波动。</p></div>
+                </div>
+                <span class="chart-tab" style="cursor:pointer;margin-top:12px;display:inline-block" id="goto-alerts-market">查看全部 5 条 →</span>
+              </div>
+            </div>
+
+            
+            <div class="card insight-block">
+              <h3>💡 全市场投资建议</h3>
+              <p style="font-size:14px;color:var(--text-secondary);line-height:1.7;margin-top:8px">
+                <strong style="color:var(--text-primary)">仓位：</strong>建议股票仓位 55%，保留 45% 现金/债券应对波动。<br>
+                <strong style="color:var(--text-primary)">方向：</strong>超配 AI 算力、电力设备；标配消费龙头；低配地产链。<br>
+                <strong style="color:var(--text-primary)">操作：</strong>不追涨，等回调或财报后再加仓；单只股票不超过总资产 20%。
+              </p>
+            </div>
+
+            <div class="card index-chart-card">
+              <div class="card-header" style="flex-wrap:wrap;gap:12px">
+                <div style="flex:1;min-width:200px">
+                  <div class="card-label">主要指数走势</div>
+                  <p class="index-chart-sub">以区间起点归一化为 100，对比标普 500 / 纳斯达克 / 沪深 300 相对强弱（Mock）</p>
+                </div>
+                <div class="chart-tabs" id="index-period-tabs" role="tablist">
+                  <button type="button" class="chart-tab" data-period="1m">1 月</button>
+                  <button type="button" class="chart-tab active" data-period="3m">3 月</button>
+                  <button type="button" class="chart-tab" data-period="6m">6 月</button>
+                  <button type="button" class="chart-tab" data-period="1y">1 年</button>
+                </div>
+              </div>
+
+              <div class="index-legend" id="index-legend">
+                <button type="button" class="index-legend-item active" data-index="sp500">
+                  <span class="dot" style="background:#10b981"></span>标普 500
+                </button>
+                <button type="button" class="index-legend-item active" data-index="nasdaq">
+                  <span class="dot" style="background:#3b82f6"></span>纳斯达克
+                </button>
+                <button type="button" class="index-legend-item active" data-index="csi300">
+                  <span class="dot" style="background:#f59e0b"></span>沪深 300
+                </button>
+              </div>
+
+              <div class="chart-area index-chart-area">
+                <canvas id="chart-market-index" aria-label="主要指数归一化走势对比图"></canvas>
+              </div>
+
+              <div class="index-stat-row" id="index-stat-row">
+                <div class="index-stat" data-index="sp500">
+                  <div class="name">标普 500</div>
+                  <div class="val">5,842</div>
+                  <div class="chg num-up">区间 +6.2%</div>
+                </div>
+                <div class="index-stat" data-index="nasdaq">
+                  <div class="name">纳斯达克</div>
+                  <div class="val">18,456</div>
+                  <div class="chg num-up">区间 +11.4%</div>
+                </div>
+                <div class="index-stat" data-index="csi300">
+                  <div class="name">沪深 300</div>
+                  <div class="val">3,892</div>
+                  <div class="chg num-up">区间 +2.8%</div>
+                </div>
+              </div>
+
+              <div class="plain-box index-insight" id="index-insight">
+                <strong>读图要点：</strong>近 3 个月纳指涨幅领先（+11.4%），显著跑赢沪深 300（+2.8%），反映全球资金仍偏好 AI 与科技成长；A 股大盘震荡偏强但弹性较弱。若你主要持有美股科技股，需警惕「美股强、A 股弱」的跷跷板；若均衡配置，当前差异尚在合理区间。
+              </div>
+            </div>
+          </div>
+
+          <!-- ========== 个股模式 ========== -->
+          <div class="scope-symbol-only">
+
+          <div class="hero-verdict">
+            <div class="question">NVDA（英伟达）现在值得投资吗？</div>
+            <div class="answer caution">可以考虑，但别追高</div>
+            <p class="summary">公司赚钱能力很强，AI 赛道景气度高，但股价已经不便宜。若已持有可继续拿着；想新买建议等回调再分批买。</p>
+            <div class="hero-actions">
+              <div class="action-chip"><strong>建议操作</strong><span>持有 / 回调后分批买入</span></div>
+              <div class="action-chip"><strong>适合人群</strong><span>能承受波动、投资 6 个月以上</span></div>
+              <div class="action-chip"><strong>不适合</strong><span>想快进快出、受不了 20% 回撤</span></div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:24px">
+            <div class="card-label">四维体检（满分 100，越高越利好）</div>
+            <div class="dim-grid">
+              <div class="dim-item"><div class="dim-score" style="color:var(--accent)">85</div><div class="dim-label">赚钱能力</div><div class="dim-plain">利润增长很快</div></div>
+              <div class="dim-item"><div class="dim-score" style="color:var(--warning)">55</div><div class="dim-label">价格贵不贵</div><div class="dim-plain">偏贵，比同行贵一倍</div></div>
+              <div class="dim-item"><div class="dim-score" style="color:var(--accent)">78</div><div class="dim-label">行业前景</div><div class="dim-plain">AI 算力需求旺</div></div>
+              <div class="dim-item"><div class="dim-score" style="color:var(--warning)">62</div><div class="dim-label">大环境</div><div class="dim-plain">利率偏高，市场谨慎</div></div>
+            </div>
+            <div class="score-bar"><div class="score-bar-fill" style="width:72%"></div></div>
+            <div class="card-meta" style="margin-top:8px;text-align:center">综合得分 72 · 更新于 2026-05-16</div>
+          </div>
+
+          <div class="card" style="margin-bottom:24px">
+            <div class="card-label">本周你需要关注的 3 件事</div>
+            <ul class="checklist">
+              <li><span><strong>5月22日 美联储会议纪要</strong> — 若表态偏鹰，科技股可能短期下跌，先别加仓</span></li>
+              <li><span><strong>股价是否跌破 $125</strong> — 跌破可考虑第一批买入（建议分 3 批）</span></li>
+              <li class="done"><span><strong>Q1 财报已公布</strong> — 业绩超预期，利好已部分反映在股价里</span></li>
+            </ul>
+          </div>
+
+          <div class="bento bento-2">
+            <div class="card">
+              <div class="card-label">价格走势 · 人话版（不用看 K 线）</div>
+              <div class="trend-simple">
+                <div class="trend-big up">+18%</div>
+                <div class="trend-desc">
+                  <h4>近 30 天涨了 18%，跑赢大盘</h4>
+                  <p>从 $111 涨到 $131，涨得偏快。类似涨幅后，短期常有 5-10% 回调。</p>
+                </div>
+              </div>
+              <div class="plain-box"><strong>什么是 K 线？</strong> 用红绿蜡烛表示每天涨跌的专业图表。你不需要会看，知道「涨多了可能回调」即可。下方 K 线图可查看每日 OHLC 与成交量。</div>
+            </div>
+            <div class="card">
+              <div class="card-label">现在贵不贵？</div>
+              <div class="card-value" style="font-size:18px;margin-top:8px">偏贵 <span class="badge badge-warn">注意</span></div>
+              <p style="font-size:13px;color:var(--text-secondary);margin-top:8px;line-height:1.6">
+                <span class="term-tip" title="市盈率：股价÷每股盈利，可理解为按当前盈利速度多少年回本">市盈率 PE</span> 约 68 倍，同行平均约 32 倍。<br><br>
+                <strong>结论：</strong>市场对未来很乐观，预期已大部分体现在股价里。
+              </p>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:24px">
+            <div class="card-header">
+              <div class="card-label">异常变动速览</div>
+              <span class="chart-tab" style="cursor:pointer" id="goto-alerts">查看全部 3 条 →</span>
+            </div>
+            <div class="alert-card warning">
+              <div class="alert-icon">⚠</div>
+              <div class="alert-body">
+                <h4>估值偏高：比同行贵约 1 倍</h4>
+                <p>业绩若不及预期，股价可能快速下跌 15-25%。</p>
+                <div class="what-to-do">→ 不要用生活费追高，等回调</div>
+              </div>
+            </div>
+            <div class="alert-card critical">
+              <div class="alert-icon">🔴</div>
+              <div class="alert-body">
+                <h4>30 天涨幅 18%，短期过热</h4>
+                <p>涨太快，类似情况后 2 周内回调较常见。</p>
+                <div class="what-to-do">→ 分批买，不要一次 all in</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ai-panel">
+            <div class="ai-panel-header">
+              <div class="ai-avatar">AI</div>
+              <div><h3>NVDA · 综合研判</h3><span>行情 + 基本面 + 宏观 + 舆情</span></div>
+            </div>
+            <div class="ai-verdict">
+              <div class="verdict-score">72</div>
+              <div class="verdict-label"><strong>谨慎偏多</strong> 估值 65 分位，业绩支撑强，短期涨幅过大</div>
+            </div>
+            <div class="ai-points">
+              <div class="ai-point"><strong>看多</strong> 数据中心营收 +94%，ROE 115%</div>
+              <div class="ai-point"><strong>风险</strong> PE 68x 高于均值，VIX 回升</div>
+              <div class="ai-point"><strong>操作</strong> 持有；新建仓等 $120-125 分批</div>
+            </div>
+          </div>
+
+          
+          <div class="insight-block">
+            <h3>📜 历史回顾</h3>
+            <div class="card">
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>时间</th><th>事件</th><th>股价反应</th><th>投资启示</th></tr></thead>
+                  <tbody>
+                    <tr><td>2025 Q1</td><td>Blackwell 架构发布，数据中心营收 +94%</td><td class="num-up">+45%</td><td>业绩驱动的主升浪，验证 AI 算力逻辑</td></tr>
+                    <tr><td>2024 Q3</td><td>财报不及预期、毛利率指引下调</td><td class="num-down">-12%</td><td>高估值下对指引极其敏感，宜等待消化</td></tr>
+                    <tr><td>2024 Q1</td><td>ChatGPT 带动的 AI 基建潮起步</td><td class="num-up">+82%</td><td>产业趋势初期，龙头享受估值+业绩双升</td></tr>
+                    <tr><td>2022</td><td>加密货币挖矿退潮、库存计提</td><td class="num-down">-51%</td><td>周期底部区域，长期布局价值凸显</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="plain-box" style="margin-top:12px"><strong>复盘结论：</strong> NVDA 过去 3 年涨幅主要来自 AI Capex 周期；每次财报后 15-25% 波动是常态，宜分批而非追高。</div>
+            </div>
+          </div>
+
+          <div class="insight-block">
+            <h3>🔮 未来预测（12 个月）</h3>
+            <div class="bento bento-3">
+              <div class="card">
+                <div class="card-label">乐观情景 · 35%</div>
+                <div class="card-value" style="font-size:16px">$160-180</div>
+                <p style="font-size:12px;color:var(--text-secondary);margin-top:8px">AI Capex 超预期、毛利率 75%+、垄断地位巩固</p>
+              </div>
+              <div class="card">
+                <div class="card-label">基准情景 · 45%</div>
+                <div class="card-value" style="font-size:16px">$135-150</div>
+                <p style="font-size:12px;color:var(--text-secondary);margin-top:8px">业绩符合预期，估值温和消化，震荡上行</p>
+              </div>
+              <div class="card">
+                <div class="card-label">悲观情景 · 20%</div>
+                <div class="card-value" style="font-size:16px;color:var(--danger)">$95-110</div>
+                <p style="font-size:12px;color:var(--text-secondary);margin-top:8px">竞争加剧、监管、估值杀三重压力</p>
+              </div>
+            </div>
+            <div class="ai-panel" style="margin-top:16px">
+              <div class="ai-verdict">
+                <div class="verdict-label" style="flex:1">
+                  <strong>综合投资建议</strong>
+                  现有仓位可持有；新建仓建议 $120-125 起分 3 批买入，止损 $108。目标持有 6-18 个月，密切跟踪财报与美联储政策。
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bento bento-4">
+            <div class="card"><div class="card-label">现价</div><div class="card-value">$131.28 <span class="badge badge-up">+2.34%</span></div></div>
+            <div class="card"><div class="card-label">PE / PB</div><div class="card-value">68.2x / 52.1x</div></div>
+            <div class="card"><div class="card-label">VIX</div><div class="card-value">18.42</div></div>
+            <div class="card"><div class="card-label">10Y-2Y</div><div class="card-value">+0.42%</div></div>
+          </div>
+
+          <div class="bento bento-2-1">
+            <div class="card span-2">
+              <div class="card-header">
+                <div class="card-label">K 线 · 专业图表</div>
+                <div class="chart-tabs"><button class="chart-tab active">日K</button><button class="chart-tab">周K</button></div>
+              </div>
+              <div class="plain-box" style="margin-bottom:12px"><strong>K 线说明：</strong> 绿涨红跌，每根代表一天，反映 OHLC 与成交量。</div>
+              <div class="chart-area tall"><canvas id="chart-main"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-label">行业热力</div>
+              <div class="heatmap">
+                <div class="heat-cell heat-up-3">NVDA<br>+2.3%</div>
+                <div class="heat-cell heat-up-2">AMD<br>+1.8%</div>
+              </div>
+            </div>
+          </div>
+
+          </div><!-- close symbol -->
+        </section>
+
+        <section id="alerts" class="panel">
+          <div class="section-header scope-market-only">
+            <h2>异常提醒 · 全市场</h2>
+            <p>大盘、宏观、自选股汇总 — 点击「查看」进入个股分析</p>
+          </div>
+          <div class="section-header scope-symbol-only">
+            <h2>异常提醒 · <span id="alerts-symbol-title">NVDA</span></h2>
+            <p>这只股票上值得你停下来看的变化</p>
+          </div>
+
+          <div class="scope-market-only">
+            <div class="alert-card warning">
+              <div class="alert-icon">⚠</div>
+              <div class="alert-body">
+                <h4>【市场】VIX 恐慌指数单周升 8%</h4>
+                <p>全市场波动加大，建议降低追高意愿。</p>
+                <div class="what-to-do"><strong>建议：</strong>股票总仓位不超过 60%，单只不超过 20%。</div>
+              </div>
+            </div>
+            <div class="alert-card info">
+              <div class="alert-icon">ℹ</div>
+              <div class="alert-body">
+                <h4>【市场】5月22日 美联储会议纪要</h4>
+                <p>宏观事件，影响所有成长股估值。</p>
+                <div class="what-to-do"><strong>建议：</strong>事件前避免大额加仓。</div>
+              </div>
+            </div>
+            <div class="card" style="margin-top:16px">
+              <div class="card-label">自选股异常汇总</div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>标的</th><th>异常</th><th>操作</th></tr></thead>
+                  <tbody>
+                    <tr><td>NVDA</td><td>30日涨18%、估值过高</td><td><button type="button" class="chart-tab pick-symbol" data-symbol="NVDA">查看</button></td></tr>
+                    <tr><td>TSLA</td><td>单日跌超3%</td><td><button type="button" class="chart-tab pick-symbol" data-symbol="TSLA">查看</button></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="scope-symbol-only">
+            <div class="alert-card critical">
+              <div class="alert-icon">🔴</div>
+              <div class="alert-body">
+                <h4>【紧急】30 天涨幅 18% — 短期涨太猛</h4>
+                <p>触发：30 日涨幅 &gt; 15%。</p>
+                <div class="what-to-do"><strong>建议：</strong>不追高；等回调后分批进场。</div>
+              </div>
+            </div>
+            <div class="alert-card warning">
+              <div class="alert-icon">⚠</div>
+              <div class="alert-body">
+                <h4>【警告】估值高于行业均值 113%</h4>
+                <p>触发：PE &gt; 行业中位数 ×1.5。</p>
+                <div class="what-to-do"><strong>建议：</strong>新买入需更耐心等便宜价。</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:24px">
+            <div class="card-label">监控规则（全市场 + 个股通用）</div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>规则名</th><th>人话解释</th><th>触发条件</th><th>状态</th></tr></thead>
+                <tbody>
+                  <tr><td>短期暴涨</td><td>涨太猛，容易回调</td><td>30 日涨幅 &gt; 15%</td><td><span class="badge badge-down">已触发</span></td></tr>
+                  <tr><td>估值过高</td><td>股价偏贵</td><td>PE &gt; 行业中位 ×1.5</td><td><span class="badge badge-warn">已触发</span></td></tr>
+                  <tr><td>市场恐慌</td><td>整体风险偏好下降</td><td>VIX 周涨 &gt; 5%</td><td><span class="badge badge-warn">已触发</span></td></tr>
+                  <tr><td>财报窗口</td><td>财报前后波动大</td><td>财报日前后 3 天</td><td><span class="badge badge-neutral">已过期</span></td></tr>
+                  <tr><td>大股东减持</td><td>内部人卖股票</td><td>减持公告</td><td><span class="badge badge-info">监控中</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+
+
+        <!-- ========== AI INSIGHTS ========== -->
+        <section id="ai-insights" class="panel">
+          <div class="section-header scope-market-only">
+            <h2>深度分析 · 全市场</h2>
+            <p>行业机会与宏观仓位 — 选股前先定方向</p>
+          </div>
+          <div class="section-header scope-symbol-only">
+            <h2>深度分析 · 个股</h2>
+            <p>情景预测、行业对比、宏观仓位与历史复盘</p>
+          </div>
+
+          <div class="sub-tabs" id="ai-main-tabs">
+            <button class="sub-tab active" data-sub="ai-watchlist">个股研判</button>
+            <button class="sub-tab" data-sub="ai-sector">行业机会</button>
+            <button class="sub-tab" data-sub="ai-macro">宏观仓位</button>
+          </div>
+
+          <div id="ai-watchlist" class="sub-panel scope-symbol-only">
+            <div class="bento bento-2">
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <div class="card-label">NVDA · 英伟达</div>
+                    <div class="card-value" style="font-size:18px">评分 72 <span class="badge badge-up">谨慎偏多</span></div>
+                  </div>
+                </div>
+                <p style="font-size:12px;color:var(--text-secondary);margin:12px 0">未来 12 个月情景预测（概率加权）</p>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>情景</th><th>概率</th><th>目标价</th><th>驱动因素</th></tr></thead>
+                    <tbody>
+                      <tr><td>乐观</td><td class="num-up">35%</td><td>$160-180</td><td>AI Capex 超预期、毛利率维持 75%+</td></tr>
+                      <tr><td>基准</td><td>45%</td><td>$135-150</td><td>业绩符合预期、估值温和消化</td></tr>
+                      <tr><td>悲观</td><td class="num-down">20%</td><td>$95-110</td><td>竞争加剧、监管、估值杀</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-label">MSFT · 微软</div>
+                <div class="card-value" style="font-size:18px">评分 78 <span class="badge badge-up">偏多</span></div>
+                <p style="font-size:12px;color:var(--text-secondary);margin:12px 0">Azure + Copilot 双轮驱动，估值合理，适合核心仓位配置。目标价 $480-520。</p>
+                <div class="timeline">
+                  <div class="tl-item"><span class="tl-date">Q2 2026</span><span class="tl-content"><strong>业绩催化剂</strong> — Copilot 企业渗透率突破 30%</span></div>
+                  <div class="tl-item"><span class="tl-date">H2 2026</span><span class="tl-content"><strong>风险窗口</strong> — 云增速若放缓至 25% 以下</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="ai-sector" class="sub-panel active scope-market-only">
+            <div class="card">
+              <div class="card-label">本周行业机会雷达</div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>行业</th><th>景气度</th><th>AI 观点</th><th>代表标的</th></tr></thead>
+                  <tbody>
+                    <tr><td>AI 算力</td><td><span class="badge badge-up">高</span></td><td>Capex 周期延续，优选龙头</td><td>NVDA, AVGO</td></tr>
+                    <tr><td>电力设备</td><td><span class="badge badge-up">中高</span></td><td>数据中心用电需求爆发</td><td>VRT, ETN</td></tr>
+                    <tr><td>消费零售</td><td><span class="badge badge-neutral">中</span></td><td>分化严重，等待 CPI 回落信号</td><td>COST, WMT</td></tr>
+                    <tr><td>地产链</td><td><span class="badge badge-down">低</span></td><td>政策底未确认，观望</td><td>—</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div id="ai-macro" class="sub-panel">
+            <div class="ai-panel">
+              <div class="ai-panel-header">
+                <div class="ai-avatar">◎</div>
+                <div><h3>宏观仓位建议 · 2026 Q2</h3><span>基于流动性 + 经济周期 + 风险偏好</span></div>
+              </div>
+              <div class="ai-verdict">
+                <div class="verdict-score" style="color:var(--warning)">55%</div>
+                <div class="verdict-label">
+                  <strong>建议股票仓位：55%（中性偏积极）</strong>
+                  美债收益率回落空间有限，但盈利周期仍在上行。建议超配科技+工业，低配地产链。
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========== MARKET DATA ========== -->
+        <section id="market" class="panel">
+          <div class="section-header">
+            <h2>行情数据</h2>
+            <p>分时/K 线、Level 2、期权链等完整行情数据</p>
+          </div>
+
+          <div class="bento bento-4">
+            <div class="card"><div class="card-label">开盘</div><div class="card-value">$128.50</div></div>
+            <div class="card"><div class="card-label">最高</div><div class="card-value">$132.10</div></div>
+            <div class="card"><div class="card-label">最低</div><div class="card-value">$127.80</div></div>
+            <div class="card"><div class="card-label">成交量</div><div class="card-value">42.8M</div></div>
+          </div>
+
+          <div class="bento bento-2-1">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-label">K 线图 · OHLC</div>
+                <div class="chart-tabs">
+                  <button class="chart-tab active">日K</button>
+                  <button class="chart-tab">周K</button>
+                  <button class="chart-tab">月K</button>
+                </div>
+              </div>
+              <div class="chart-area tall"><canvas id="chart-market"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-label">Level 2 · 买卖五档</div>
+              <div class="order-book" style="margin-top:12px">
+                <div class="ob-row ob-ask"><span>卖5 $131.35</span><span>1,200</span><div class="ob-bar ask" style="width:30%"></div></div>
+                <div class="ob-row ob-ask"><span>卖4 $131.32</span><span>2,400</span></div>
+                <div class="ob-row ob-ask"><span>卖3 $131.30</span><span>3,100</span></div>
+                <div class="ob-row ob-ask"><span>卖2 $131.29</span><span>5,800</span></div>
+                <div class="ob-row ob-ask"><span>卖1 $131.28</span><span>8,200</span></div>
+                <div style="text-align:center;padding:8px 0;font-weight:600;color:var(--text-primary)">$131.28</div>
+                <div class="ob-row ob-bid"><span>买1 $131.27</span><span>6,500</span><div class="ob-bar bid" style="width:45%"></div></div>
+                <div class="ob-row ob-bid"><span>买2 $131.25</span><span>4,200</span></div>
+                <div class="ob-row ob-bid"><span>买3 $131.22</span><span>3,800</span></div>
+                <div class="ob-row ob-bid"><span>买4 $131.20</span><span>2,100</span></div>
+                <div class="ob-row ob-bid"><span>买5 $131.18</span><span>1,900</span></div>
+              </div>
+              <div class="card-meta" style="margin-top:12px">大单追踪：14:32 买入 $131.20 × 50,000 股</div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:16px">
+            <div class="card-label">期权链 · Options Chain · 2026-06-20 到期</div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Call OI</th><th>Call Vol</th><th>Call IV</th><th>Call 价</th>
+                    <th class="options-strike">行权价</th>
+                    <th>Put 价</th><th>Put IV</th><th>Put Vol</th><th>Put OI</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>12,400</td><td>3,200</td><td>42%</td><td class="num-up">$8.50</td><td class="options-strike">$125</td><td>$3.20</td><td>38%</td><td>1,800</td><td>8,200</td></tr>
+                  <tr style="background:rgba(16,185,129,0.06)"><td>28,600</td><td>8,400</td><td>45%</td><td class="num-up">$5.80</td><td class="options-strike">$130</td><td>$5.10</td><td>41%</td><td>4,200</td><td>15,600</td></tr>
+                  <tr><td>18,200</td><td>5,100</td><td>48%</td><td class="num-up">$3.60</td><td class="options-strike">$135</td><td>$7.80</td><td>44%</td><td>3,600</td><td>12,400</td></tr>
+                  <tr><td>8,600</td><td>2,400</td><td>52%</td><td class="num-up">$2.10</td><td class="options-strike">$140</td><td>$11.20</td><td>47%</td><td>2,800</td><td>9,800</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="card-meta">ATM IV: 45.2% · Put/Call Ratio: 0.82 · Max Pain: $130</div>
+          </div>
+        </section>
+
+        <!-- ========== FUNDAMENTAL ========== -->
+        <section id="fundamental" class="panel">
+          <div class="section-header">
+            <h2>基本面与财务 · Fundamental Data</h2>
+            <p>公司的"体检报告" — 三表、估值、成长与质量指标</p>
+          </div>
+
+          <div class="sub-tabs">
+            <button class="sub-tab active" data-sub="fin-overview">估值概览</button>
+            <button class="sub-tab" data-sub="fin-income">利润表</button>
+            <button class="sub-tab" data-sub="fin-balance">资产负债表</button>
+            <button class="sub-tab" data-sub="fin-cashflow">现金流量表</button>
+          </div>
+
+          <div id="fin-overview" class="sub-panel active">
+            <div class="bento bento-4">
+              <div class="card"><div class="card-label">PE TTM</div><div class="card-value">68.2x</div><div class="card-meta">5年均值 45x</div></div>
+              <div class="card"><div class="card-label">PB</div><div class="card-value">52.1x</div></div>
+              <div class="card"><div class="card-label">PS TTM</div><div class="card-value">26.8x</div></div>
+              <div class="card"><div class="card-label">股息率</div><div class="card-value">0.02%</div></div>
+            </div>
+            <div class="bento bento-4">
+              <div class="card"><div class="card-label">ROE</div><div class="card-value">115.2% <span class="badge badge-up">↑</span></div></div>
+              <div class="card"><div class="card-label">ROIC</div><div class="card-value">89.4%</div></div>
+              <div class="card"><div class="card-label">毛利率</div><div class="card-value">75.0%</div></div>
+              <div class="card"><div class="card-label">自由现金流 TTM</div><div class="card-value">$72.4B</div></div>
+            </div>
+            <div class="card">
+              <div class="card-label">营收 & 净利润 · 近 8 季度 (YoY %)</div>
+              <div class="chart-area"><canvas id="chart-fundamental"></canvas></div>
+            </div>
+          </div>
+
+          <div id="fin-income" class="sub-panel">
+            <div class="card">
+              <div class="card-label">利润表 · 近 5 年 (单位: $B)</div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>项目</th><th>FY2021</th><th>FY2022</th><th>FY2023</th><th>FY2024</th><th>FY2025E</th><th>YoY</th></tr></thead>
+                  <tbody>
+                    <tr><td>营业收入</td><td>16.7</td><td>26.9</td><td>27.0</td><td>60.9</td><td>114.5</td><td class="num-up">+88%</td></tr>
+                    <tr><td>毛利润</td><td>10.4</td><td>17.5</td><td>15.4</td><td>45.0</td><td>85.9</td><td class="num-up">+91%</td></tr>
+                    <tr><td>净利润</td><td>4.3</td><td>9.8</td><td>4.4</td><td>29.8</td><td>58.2</td><td class="num-up">+95%</td></tr>
+                    <tr><td>EPS</td><td>1.73</td><td>3.85</td><td>1.74</td><td>11.93</td><td>23.50</td><td class="num-up">+97%</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div id="fin-balance" class="sub-panel">
+            <div class="card">
+              <div class="card-label">资产负债表摘要 · FY2025</div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>项目</th><th>金额 ($B)</th><th>同比</th></tr></thead>
+                  <tbody>
+                    <tr><td>总资产</td><td>85.2</td><td class="num-up">+42%</td></tr>
+                    <tr><td>总负债</td><td>28.4</td><td>+18%</td></tr>
+                    <tr><td>股东权益</td><td>56.8</td><td class="num-up">+58%</td></tr>
+                    <tr><td>资产负债率</td><td>33.3%</td><td class="num-up">健康</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div id="fin-cashflow" class="sub-panel">
+            <div class="card">
+              <div class="card-label">现金流量表 · 近 5 年 ($B)</div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>年度</th><th>经营现金流</th><th>投资现金流</th><th>筹资现金流</th><th>自由现金流</th></tr></thead>
+                  <tbody>
+                    <tr><td>FY2024</td><td class="num-up">56.1</td><td>-8.2</td><td>-40.2</td><td class="num-up">47.9</td></tr>
+                    <tr><td>FY2023</td><td>9.1</td><td>-5.8</td><td>-12.4</td><td>3.3</td></tr>
+                    <tr><td>FY2022</td><td>5.6</td><td>-10.2</td><td>-1.8</td><td>-4.6</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========== MACRO ========== -->
+        <section id="macro" class="panel">
+          <div class="section-header">
+            <h2>宏观经济与行业 · Macro & Industry</h2>
+            <p>投资的"天气预报" — 流动性、经济周期、行业景气度</p>
+          </div>
+
+          <div class="sub-tabs">
+            <button class="sub-tab active" data-sub="macro-liquidity">流动性</button>
+            <button class="sub-tab" data-sub="macro-economy">经济晴雨表</button>
+            <button class="sub-tab" data-sub="macro-industry">行业指标</button>
+          </div>
+
+          <div id="macro-liquidity" class="sub-panel active">
+            <div class="bento bento-3">
+              <div class="card">
+                <div class="card-label">美联储基准利率</div>
+                <div class="card-value">4.25-4.50%</div>
+                <div class="card-meta">上次调整：2025-12 · 维持</div>
+              </div>
+              <div class="card">
+                <div class="card-label">中国 LPR (1年期)</div>
+                <div class="card-value">3.00%</div>
+                <div class="card-meta">上次下调：2025-10</div>
+              </div>
+              <div class="card">
+                <div class="card-label">美债 10Y 收益率</div>
+                <div class="card-value">4.28% <span class="badge badge-down">-5bp</span></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-label">美债收益率曲线 · 10Y-2Y 利差</div>
+              <div class="chart-area"><canvas id="chart-yield"></canvas></div>
+              <div class="card-meta">当前 +42bp · 未倒挂 · 衰退概率模型：18%</div>
+            </div>
+            <div class="bento bento-2">
+              <div class="card">
+                <div class="card-label">M1 同比增速</div>
+                <div class="card-value">+5.2%</div>
+              </div>
+              <div class="card">
+                <div class="card-label">M2 同比增速</div>
+                <div class="card-value">+7.8%</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="macro-economy" class="sub-panel">
+            <div class="gauge-row">
+              <div class="gauge">
+                <div class="gauge-ring" style="--pct:72" data-val="52.1"></div>
+                <label>制造业 PMI</label>
+              </div>
+              <div class="gauge">
+                <div class="gauge-ring" style="--pct:45" data-val="2.4%"></div>
+                <label>CPI 同比</label>
+              </div>
+              <div class="gauge">
+                <div class="gauge-ring" style="--pct:60" data-val="2.8%"></div>
+                <label>GDP 增速</label>
+              </div>
+              <div class="gauge">
+                <div class="gauge-ring" style="--pct:35" data-val="4.1%"></div>
+                <label>失业率</label>
+              </div>
+            </div>
+            <div class="card" style="margin-top:16px">
+              <div class="card-label">社融增量 · 近 12 月 (万亿)</div>
+              <div class="chart-area"><canvas id="chart-social-fin"></canvas></div>
+            </div>
+          </div>
+
+          <div id="macro-industry" class="sub-panel">
+            <div class="bento bento-2">
+              <div class="card">
+                <div class="card-label">半导体 · 全球芯片出货量指数</div>
+                <div class="card-value">128.5 <span class="badge badge-up">+12% YoY</span></div>
+                <div class="chart-area" style="height:120px"><canvas id="chart-chip"></canvas></div>
+              </div>
+              <div class="card">
+                <div class="card-label">航运 · BDI 波罗的海指数</div>
+                <div class="card-value">1,842 <span class="badge badge-down">-8.3%</span></div>
+                <div class="card-meta">周期股风向标 · 需求偏弱</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-label">大宗商品价格追踪</div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>品种</th><th>现价</th><th>日涨跌</th><th>关联行业</th></tr></thead>
+                  <tbody>
+                    <tr><td>WTI 原油</td><td>$72.40</td><td class="num-down">-1.2%</td><td>能源、化工</td></tr>
+                    <tr><td>黄金</td><td>$2,340</td><td class="num-up">+0.5%</td><td>贵金属、避险</td></tr>
+                    <tr><td>铜</td><td>$4.52/lb</td><td class="num-up">+0.8%</td><td>电力、新能源</td></tr>
+                    <tr><td>天然气</td><td>$2.85</td><td class="num-down">-2.1%</td><td>公用事业</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========== NEWS ========== -->
+        <section id="news" class="panel">
+          <div class="section-header">
+            <h2>资讯、公告与舆情 · News & Sentiment</h2>
+            <p>市场的"噪音与信号" — 硬核公告、7×24 快讯、情绪指标</p>
+          </div>
+
+          <div class="bento bento-4">
+            <div class="card">
+              <div class="card-label">融资余额 (A股)</div>
+              <div class="card-value">1.52万亿</div>
+              <div class="card-meta"><span class="badge badge-up">+0.3%</span> 杠杆资金小幅流入</div>
+            </div>
+            <div class="card">
+              <div class="card-label">VIX</div>
+              <div class="card-value">18.42</div>
+            </div>
+            <div class="card">
+              <div class="card-label">分析师一致预期 (NVDA)</div>
+              <div class="card-value">买入</div>
+              <div class="card-meta">38 买 / 4 持 / 0 卖 · 目标价 $152</div>
+            </div>
+            <div class="card">
+              <div class="card-label">舆情情绪指数</div>
+              <div class="card-value">68 <span class="badge badge-up">偏多</span></div>
+            </div>
+          </div>
+
+          <div class="bento bento-2">
+            <div class="card">
+              <div class="card-label">交易所公告 · 结构化</div>
+              <div class="timeline">
+                <div class="tl-item"><span class="tl-date">05-10</span><span class="tl-content"><strong><a href="https://investor.nvidia.com/financial-info/financial-reports" target="_blank" rel="noopener noreferrer" style="color:inherit">Q1 财报 ↗</a></strong> — 营收/EPS 超预期</span></div>
+                <div class="tl-item"><span class="tl-date">05-08</span><span class="tl-content"><strong><a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001045810" target="_blank" rel="noopener noreferrer" style="color:inherit">回购计划 ↗</a></strong> — $500亿授权</span></div>
+                <div class="tl-item"><span class="tl-date">04-22</span><span class="tl-content"><strong><a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001045810" target="_blank" rel="noopener noreferrer" style="color:inherit">股权激励 ↗</a></strong> — 新增 1200 万股</span></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-label">7×24 财经快讯</div>
+              <div class="news-feed">
+                <div class="news-item"><a class="news-link" href="https://www.cls.cn/telegraph" target="_blank" rel="noopener noreferrer"><span class="news-time">15:28</span><span class="news-tag tag-flash">财联社</span><span class="news-title">英伟达 H200 对华出口许可或放宽，产业链迎利好</span><span class="link-out">↗ 原文</span></a></div>
+                <div class="news-item"><a class="news-link" href="https://wallstreetcn.com/live/global" target="_blank" rel="noopener noreferrer"><span class="news-time">15:05</span><span class="news-tag tag-flash">华尔街见闻</span><span class="news-title">美联储官员：通胀仍高于目标，降息需更多证据</span><span class="link-out">↗ 原文</span></a></div>
+                <div class="news-item"><a class="news-link" href="https://fred.stlouisfed.org/releases/cpi" target="_blank" rel="noopener noreferrer"><span class="news-time">14:40</span><span class="news-tag tag-macro">宏观</span><span class="news-title">4月 PPI 同比 +2.2%，低于预期 2.5%</span><span class="link-out">↗ 原文</span></a></div>
+                <div class="news-item"><a class="news-link" href="https://www.bloomberg.com/quote/NVDA:US" target="_blank" rel="noopener noreferrer"><span class="news-time">14:12</span><span class="news-tag tag-flash">彭博</span><span class="news-title">Options activity surges in NVDA ahead of earnings</span><span class="link-out">↗ 原文</span></a></div>
+                <div class="news-item"><a class="news-link" href="https://investor.tsmc.com/english/weekly-revenue" target="_blank" rel="noopener noreferrer"><span class="news-time">13:55</span><span class="news-tag tag-announce">公告</span><span class="news-title">台积电 4月营收同比 +48.1%，超预期</span><span class="link-out">↗ 原文</span></a></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========== PORTFOLIO SIM ========== -->
+        <section id="portfolio-sim" class="panel">
+          <div class="section-header">
+            <h2>收益模拟器</h2>
+            <p>手动录入模拟持仓，计算收益率 — 不接入真实券商账户</p>
+          </div>
+          <div class="bento bento-2">
+            <div class="card">
+              <div class="card-label">模拟持仓录入</div>
+              <div class="table-wrap" style="margin-top:16px">
+                <table>
+                  <thead><tr><th>标的</th><th>成本价</th><th>现价</th><th>数量</th><th>盈亏</th><th>占比</th></tr></thead>
+                  <tbody>
+                    <tr><td>NVDA</td><td>$95.00</td><td>$131.28</td><td>100</td><td class="num-up">+38.2%</td><td>45%</td></tr>
+                    <tr><td>MSFT</td><td>$380.00</td><td>$432.50</td><td>50</td><td class="num-up">+13.8%</td><td>35%</td></tr>
+                    <tr><td>现金</td><td>—</td><td>—</td><td>—</td><td>—</td><td>20%</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <button class="chart-tab" style="margin-top:12px">+ 添加标的</button>
+            </div>
+            <div class="card">
+              <div class="card-label">组合绩效</div>
+              <div class="card-value" style="margin-top:12px">+28.6% <span class="badge badge-up">YTD</span></div>
+              <div class="card-meta">vs 标普500 +9.2% · Alpha +19.4%</div>
+              <div class="chart-area" style="margin-top:16px"><canvas id="chart-portfolio"></canvas></div>
+              <div class="card-meta" style="margin-top:12px">夏普比率 1.82 · 最大回撤 -12.4%</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========== SETTINGS ========== -->
+        <section id="settings" class="panel">
+          <div class="section-header">
+            <h2>数据源百科</h2>
+            <p>按投资数据类型拆解：用什么源、能拿到什么、免费还是付费、怎么接到「gll-金融投资指挥中台」</p>
+          </div>
+
+          <div class="card" style="margin-bottom:24px">
+            <div class="card-label">说明：数据从哪来？</div>
+            <p style="font-size:13px;color:var(--text-secondary);margin-top:8px;line-height:1.7">
+              本平台不生产数据，而是把分散在各处的<strong style="color:var(--text-primary)">行情、财报、宏观、新闻</strong>聚合到一起，再由 AI 翻译成「值不值得买」「有什么异常」。<br><br>
+              下表按模块列出推荐数据源。标 <span class="ds-tag ds-free">免费</span> 的可零成本起步；标 <span class="ds-tag ds-paid">付费</span> 的数据更全、延迟更低。
+            </p>
+          </div>
+
+          <!-- 1. 行情 -->
+          <div class="ds-category">
+            <div class="ds-category-header">
+              <h3>① 实时与历史行情</h3>
+              <p>回答：现在多少钱？最近涨还是跌？</p>
+            </div>
+            <div class="card">
+              <div class="table-wrap">
+                <table class="ds-table">
+                  <thead>
+                    <tr><th>数据指标</th><th>通俗理解</th><th>推荐数据源</th><th>费用</th><th>接口/API</th><th>更新频率</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>现价、涨跌幅</td>
+                      <td class="col-metric">今天股价和涨跌百分比</td>
+                      <td><span class="ds-tag ds-us">美</span> Yahoo Finance (yfinance)<br><span class="ds-tag ds-cn">A</span> 新浪财经 / 腾讯财经</td>
+                      <td><span class="ds-tag ds-free">免费</span></td>
+                      <td>yfinance Python 库；AkShare <code>stock_zh_a_spot</code></td>
+                      <td>延时 15min / 实时*</td>
+                    </tr>
+                    <tr>
+                      <td>日/周/月价格历史</td>
+                      <td class="col-metric">过去涨跌走势（K 线原料）</td>
+                      <td><span class="ds-tag ds-us">美</span> Polygon.io<br><span class="ds-tag ds-us">美</span> Alpha Vantage<br><span class="ds-tag ds-cn">A</span> Tushare / AkShare</td>
+                      <td>免费档 + 付费</td>
+                      <td>Polygon <code>/v2/aggs</code>；Tushare <code>daily</code></td>
+                      <td>日级 / 分钟级</td>
+                    </tr>
+                    <tr>
+                      <td>成交量、换手率</td>
+                      <td class="col-metric">今天交易活不活跃</td>
+                      <td>Tushare、AkShare、Polygon</td>
+                      <td><span class="ds-tag ds-free">免费</span></td>
+                      <td>同上</td>
+                      <td>日级</td>
+                    </tr>
+                    <tr >
+                      <td>Level 2 五档盘口</td>
+                      <td class="col-metric">买卖挂单，短线用</td>
+                      <td>富途 OpenAPI、老虎、IB TWS</td>
+                      <td><span class="ds-tag ds-paid">付费</span></td>
+                      <td>券商 OpenAPI</td>
+                      <td>实时</td>
+                    </tr>
+                    <tr >
+                      <td>期权链、IV、OI</td>
+                      <td class="col-metric">大资金对未来价格的预期</td>
+                      <td>CBOE、Polygon Options、ORATS</td>
+                      <td><span class="ds-tag ds-paid">付费</span></td>
+                      <td>Polygon <code>/v3/snapshot/options</code></td>
+                      <td>实时 / 日终</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. 基本面 -->
+          <div class="ds-category">
+            <div class="ds-category-header">
+              <h3>② 基本面与财务</h3>
+              <p>回答：公司赚不赚钱？贵不贵？</p>
+            </div>
+            <div class="card">
+              <div class="table-wrap">
+                <table class="ds-table">
+                  <thead>
+                    <tr><th>数据指标</th><th>通俗理解</th><th>推荐数据源</th><th>费用</th><th>接口/API</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>利润表、资产负债表、现金流</td>
+                      <td class="col-metric">公司财务「三张表」</td>
+                      <td><span class="ds-tag ds-us">美</span> SEC EDGAR (10-K/10-Q)<br><span class="ds-tag ds-cn">A</span> 巨潮资讯 / 东方财富</td>
+                      <td><span class="ds-tag ds-free">免费</span></td>
+                      <td>sec-edgar-api；AkShare <code>stock_financial_report</code></td>
+                    </tr>
+                    <tr>
+                      <td>PE、PB、股息率</td>
+                      <td class="col-metric">股价贵不贵、有没有分红</td>
+                      <td>Yahoo Finance、理杏仁、Tushare <code>daily_basic</code></td>
+                      <td>免费 + 付费</td>
+                      <td>Tushare；理杏仁 API</td>
+                    </tr>
+                    <tr>
+                      <td>ROE、毛利率、FCF</td>
+                      <td class="col-metric">赚钱效率和质量</td>
+                      <td>Finviz、理杏仁、Wind（机构）</td>
+                      <td>免费 / <span class="ds-tag ds-paid">付费</span></td>
+                      <td>理杏仁；Tushare 财务指标</td>
+                    </tr>
+                    <tr>
+                      <td>财报日历</td>
+                      <td class="col-metric">什么时候发财报（波动大）</td>
+                      <td>Nasdaq Earnings Calendar、AkShare</td>
+                      <td><span class="ds-tag ds-free">免费</span></td>
+                      <td>爬虫 / AkShare</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. 宏观 -->
+          <div class="ds-category">
+            <div class="ds-category-header">
+              <h3>③ 宏观经济与行业</h3>
+              <p>回答：大环境适不适合买股票？</p>
+            </div>
+            <div class="card">
+              <div class="table-wrap">
+                <table class="ds-table">
+                  <thead>
+                    <tr><th>数据指标</th><th>通俗理解</th><th>推荐数据源</th><th>费用</th><th>接口/API</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>美联储利率、LPR</td>
+                      <td class="col-metric">借钱贵不贵，影响估值</td>
+                      <td>FRED、中国人民银行官网</td>
+                      <td><span class="ds-tag ds-free">免费</span></td>
+                      <td>FRED API <code>FEDFUNDS</code>、<code>LPR</code></td>
+                    </tr>
+                    <tr>
+                      <td>美债收益率、10Y-2Y</td>
+                      <td class="col-metric">经济衰退预警（倒挂=危险信号）</td>
+                      <td>FRED、美国财政部</td>
+                      <td><span class="ds-tag ds-free">免费</span></td>
+                      <td>FRED <code>DGS10</code> <code>DGS2</code></td>
+                    </tr>
+                    <tr>
+                      <td>GDP、CPI、PMI、就业</td>
+                      <td class="col-metric">经济好不好、通胀高不高</td>
+                      <td>FRED、国家统计局、财新</td>
+                      <td><span class="ds-tag ds-free">免费</span></td>
+                      <td>FRED；AkShare 宏观</td>
+                    </tr>
+                    <tr>
+                      <td>M1/M2、社融</td>
+                      <td class="col-metric">市场钱多不多（A股）</td>
+                      <td>中国人民银行、Wind</td>
+                      <td>免费 / 付费</td>
+                      <td>AkShare <code>macro_china_money_supply</code></td>
+                    </tr>
+                    <tr>
+                      <td>行业指标（芯片出货、BDI 等）</td>
+                      <td class="col-metric">你买的行业景气不景气</td>
+                      <td>WSTS、波罗的海交易所、上期所</td>
+                      <td>免费 / 付费</td>
+                      <td>行业 RSS / 爬虫</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. 资讯舆情 -->
+          <div class="ds-category">
+            <div class="ds-category-header">
+              <h3>④ 资讯、公告与舆情</h3>
+              <p>回答：发生了什么可能影响股价的事？</p>
+            </div>
+            <div class="card">
+              <div class="table-wrap">
+                <table class="ds-table">
+                  <thead>
+                    <tr><th>数据指标</th><th>通俗理解</th><th>推荐数据源</th><th>费用</th><th>接口/API</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>交易所公告</td>
+                      <td class="col-metric">官方大事：财报、回购、减持</td>
+                      <td>SEC EDGAR、巨潮资讯、港交所披露易</td>
+                      <td><span class="ds-tag ds-free">免费</span></td>
+                      <td>EDGAR RSS；cninfo 爬虫</td>
+                    </tr>
+                    <tr>
+                      <td>7×24 财经快讯</td>
+                      <td class="col-metric">实时新闻流</td>
+                      <td>财联社、华尔街见闻、彭博终端</td>
+                      <td>付费 API</td>
+                      <td>财联社开放平台；RSS</td>
+                    </tr>
+                    <tr>
+                      <td>融资余额、VIX</td>
+                      <td class="col-metric">市场有多恐慌/多贪婪</td>
+                      <td>上交所、CBOE、FRED</td>
+                      <td><span class="ds-tag ds-free">免费</span></td>
+                      <td>AkShare；FRED <code>VIXCLS</code></td>
+                    </tr>
+                    <tr>
+                      <td>分析师评级</td>
+                      <td class="col-metric">券商研究员怎么看</td>
+                      <td>TipRanks、Refinitiv、萝卜投研</td>
+                      <td>付费</td>
+                      <td>TipRanks API</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. AI -->
+          <div class="ds-category">
+            <div class="ds-category-header">
+              <h3>⑤ AI 研判层（你的「翻译官」）</h3>
+              <p>把上面所有数据 → 翻译成「值不值得买」「有什么异常」</p>
+            </div>
+            <div class="card">
+              <div class="table-wrap">
+                <table class="ds-table">
+                  <thead>
+                    <tr><th>能力</th><th>输入</th><th>推荐方案</th><th>说明</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>投资结论生成</td>
+                      <td>四维评分数据</td>
+                      <td>本地 Ollama (Qwen/DeepSeek) 或 OpenAI API</td>
+                      <td>Prompt 固定输出：值得吗 / 风险 / 操作建议</td>
+                    </tr>
+                    <tr>
+                      <td>异常检测</td>
+                      <td>行情+估值+宏观规则</td>
+                      <td>自研规则引擎 + LLM 润色</td>
+                      <td>先规则触发，再 AI 写人话说明</td>
+                    </tr>
+                    <tr>
+                      <td>新闻摘要</td>
+                      <td>快讯流</td>
+                      <td>LLM 摘要 + 分类（利好/利空/中性）</td>
+                      <td>过滤 90% 噪音，只留影响股价的</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-label">推荐起步组合（个人投资者零/低成本）</div>
+            <div class="plain-box" style="margin-top:12px">
+              <strong>美股：</strong> yfinance（行情）+ SEC EDGAR（财报）+ FRED（宏观）+ 本地 LLM<br>
+              <strong>A股：</strong> AkShare 或 Tushare 积分（行情+财报+宏观）+ 巨潮公告 + 财联社 RSS<br>
+              <strong>异常监控：</strong> 自研规则（涨幅、PE、VIX）→ 触发后调用 LLM 生成人话提醒
+            </div>
+          </div>
+        </section>
+
+
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Panel navigation
+    function goToPanel(panelId) {
+      if (!panelId) return;
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      const navItem = document.querySelector('.nav-item[data-panel="' + panelId + '"]');
+      if (navItem) navItem.classList.add('active');
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      const panel = document.getElementById(panelId);
+      if (panel) {
+        panel.classList.add('active');
+        initChartsInPanel(panel);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    document.querySelector('.nav')?.addEventListener('click', function(e) {
+      const item = e.target.closest('.nav-item[data-panel]');
+      if (item) {
+        e.preventDefault();
+        goToPanel(item.dataset.panel);
+      }
+    });
+
+    // Sub-tabs
+    document.querySelectorAll('.sub-tabs').forEach(tabGroup => {
+      tabGroup.querySelectorAll('.sub-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          const subId = tab.dataset.sub;
+          tabGroup.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          const parent = tabGroup.parentElement;
+          parent.querySelectorAll('.sub-panel').forEach(p => p.classList.remove('active'));
+          const sub = document.getElementById(subId);
+          if (sub) {
+            sub.classList.add('active');
+            initChartsInPanel(sub);
+          }
+        });
+      });
+    });
+
+
+
+    // ===== 全市场 / 个股 双态 =====
+    const SYMBOL_DB = {
+      NVDA: { name: '英伟达', display: 'NVDA · 英伟达' },
+      MSFT: { name: '微软', display: 'MSFT · 微软' },
+      AAPL: { name: '苹果', display: 'AAPL · 苹果' },
+      TSLA: { name: '特斯拉', display: 'TSLA · 特斯拉' },
+      '600519': { name: '贵州茅台', display: '600519 · 贵州茅台' },
+    };
+
+    let currentSymbol = null;
+
+    function getBodyModes() {
+      return { scope: document.body.classList.contains('scope-symbol') ? 'symbol' : 'market' };
+    }
+
+    function applyBodyModes({ scope }) {
+      document.body.classList.toggle('scope-market', scope === 'market');
+      document.body.classList.toggle('scope-symbol', scope === 'symbol');
+    }
+
+    function setScope(symbol) {
+      const modes = getBodyModes();
+      const search = document.getElementById('symbol-search');
+      const label = document.getElementById('scope-symbol-label');
+
+      if (!symbol || !String(symbol).trim()) {
+        currentSymbol = null;
+        applyBodyModes({ scope: 'market' });
+        if (search) search.value = '';
+        switchAiTabForScope(false);
+        requestAnimationFrame(() => {
+          if (typeof drawMarketIndexChart === 'function') {
+            if (typeof initialized !== 'undefined') initialized.delete('chart-market-index');
+            drawMarketIndexChart();
+            if (typeof initialized !== 'undefined') initialized.add('chart-market-index');
+          }
+        });
+        return;
+      }
+
+      const key = String(symbol).trim().toUpperCase().split(/[·\s]/)[0];
+      const info = SYMBOL_DB[key] || { name: key, display: key };
+      currentSymbol = key;
+      applyBodyModes({ scope: 'symbol' });
+      if (search) search.value = info.display;
+      if (label) label.textContent = key;
+      document.getElementById('alerts-symbol-title') && (document.getElementById('alerts-symbol-title').textContent = key);
+      switchAiTabForScope(true);
+    }
+
+    function switchAiTabForScope(isSymbol) {
+      const sector = document.getElementById('ai-sector');
+      const watch = document.getElementById('ai-watchlist');
+      const macro = document.getElementById('ai-macro');
+      if (!sector) return;
+      [sector, watch, macro].forEach(p => p && p.classList.remove('active'));
+      document.querySelectorAll('#ai-main-tabs .sub-tab').forEach(t => t.classList.remove('active'));
+      if (isSymbol && watch) {
+        watch.classList.add('active');
+        document.querySelector('#ai-main-tabs .sub-tab[data-sub="ai-watchlist"]')?.classList.add('active');
+      } else {
+        sector.classList.add('active');
+        document.querySelector('#ai-main-tabs .sub-tab[data-sub="ai-sector"]')?.classList.add('active');
+        initChartsInPanel(sector);
+      }
+    }
+
+    function resolveSymbolFromInput(val) {
+      if (!val || !val.trim()) return null;
+      const upper = val.trim().toUpperCase();
+      for (const k of Object.keys(SYMBOL_DB)) {
+        if (upper.includes(k)) return k;
+      }
+      return upper.split(/[·\s,.]/)[0];
+    }
+
+    const searchEl = document.getElementById('symbol-search');
+    searchEl?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') setScope(resolveSymbolFromInput(searchEl.value));
+    });
+    searchEl?.addEventListener('blur', () => {
+      if (!searchEl.value.trim()) setScope(null);
+    });
+    document.getElementById('search-clear')?.addEventListener('click', () => setScope(null));
+
+    document.querySelectorAll('.quick-pick, .stock-row, .pick-symbol').forEach(el => {
+      el.addEventListener('click', () => {
+        setScope(el.dataset.symbol);
+        if (el.classList.contains('pick-symbol') || el.classList.contains('stock-row')) {
+          goToPanel('dashboard');
+        }
+      });
+    });
+
+    document.getElementById('goto-alerts-market')?.addEventListener('click', () => {
+      goToPanel('alerts');
+    });
+
+    // 默认全市场
+    setScope(null);
+    initChartsInPanel(document.getElementById('dashboard'));
+
+
+
+    document.getElementById('goto-alerts')?.addEventListener('click', () => {
+      goToPanel('alerts');
+    });
+
+
+
+    // Simple canvas chart renderer
+    function drawLineChart(canvasId, data, color = '#10b981') {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+      const w = rect.width, h = rect.height;
+      const pad = { t: 16, r: 16, b: 24, l: 40 };
+      const cw = w - pad.l - pad.r, ch = h - pad.t - pad.b;
+      const min = Math.min(...data), max = Math.max(...data);
+      const range = max - min || 1;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Grid
+      ctx.strokeStyle = 'rgba(51, 65, 85, 0.4)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        const y = pad.t + (ch / 4) * i;
+        ctx.beginPath();
+        ctx.moveTo(pad.l, y);
+        ctx.lineTo(w - pad.r, y);
+        ctx.stroke();
+      }
+
+      // Area fill
+      const grad = ctx.createLinearGradient(0, pad.t, 0, h - pad.b);
+      grad.addColorStop(0, color.replace(')', ', 0.25)').replace('rgb', 'rgba').replace('#10b981', 'rgba(16, 185, 129, 0.25)'));
+      grad.addColorStop(1, 'rgba(16, 185, 129, 0)');
+
+      ctx.beginPath();
+      data.forEach((v, i) => {
+        const x = pad.l + (cw / (data.length - 1)) * i;
+        const y = pad.t + ch - ((v - min) / range) * ch;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.lineTo(pad.l + cw, h - pad.b);
+      ctx.lineTo(pad.l, h - pad.b);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.12)';
+      ctx.fill();
+
+      // Line
+      ctx.beginPath();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      data.forEach((v, i) => {
+        const x = pad.l + (cw / (data.length - 1)) * i;
+        const y = pad.t + ch - ((v - min) / range) * ch;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      // Candlestick variant (个股 K 线，不含指数对比图)
+      if (canvasId === 'chart-main' || canvasId === 'chart-market') {
+        drawCandles(ctx, pad, cw, ch, w);
+      }
+    }
+
+    function drawCandles(ctx, pad, cw, ch, w) {
+      const candles = 24;
+      const bw = cw / candles * 0.6;
+      let price = 120;
+      for (let i = 0; i < candles; i++) {
+        const o = price;
+        const change = (Math.random() - 0.45) * 4;
+        const c = o + change;
+        const hi = Math.max(o, c) + Math.random() * 2;
+        const lo = Math.min(o, c) - Math.random() * 2;
+        price = c;
+        const x = pad.l + (cw / candles) * i + (cw / candles) / 2;
+        const scale = (v) => pad.t + ch - ((v - 115) / 20) * ch;
+        const up = c >= o;
+        ctx.strokeStyle = ctx.fillStyle = up ? '#10b981' : '#ef4444';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x, scale(hi));
+        ctx.lineTo(x, scale(lo));
+        ctx.stroke();
+        const top = scale(Math.max(o, c)), bot = scale(Math.min(o, c));
+        ctx.fillRect(x - bw / 2, top, bw, Math.max(bot - top, 2));
+      }
+    }
+
+    function drawBarChart(canvasId, datasets) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+      const w = rect.width, h = rect.height;
+      const pad = { t: 20, r: 16, b: 30, l: 40 };
+      const cw = w - pad.l - pad.r, ch = h - pad.t - pad.b;
+      const colors = ['#10b981', '#3b82f6'];
+      const n = datasets[0].length;
+      const max = Math.max(...datasets.flat()) * 1.1;
+      const groupW = cw / n;
+      const barW = groupW / (datasets.length + 1);
+
+      ctx.clearRect(0, 0, w, h);
+      datasets.forEach((data, di) => {
+        data.forEach((v, i) => {
+          const x = pad.l + groupW * i + barW * (di + 0.5);
+          const barH = (v / max) * ch;
+          ctx.fillStyle = colors[di];
+          ctx.fillRect(x, pad.t + ch - barH, barW, barH);
+        });
+      });
+    }
+
+    // ===== 主要指数走势（全市场） =====
+    const MARKET_INDEX_META = {
+      sp500: { name: '标普 500', color: '#10b981', price: '5,842' },
+      nasdaq: { name: '纳斯达克', color: '#3b82f6', price: '18,456' },
+      csi300: { name: '沪深 300', color: '#f59e0b', price: '3,892' },
+    };
+
+    const MARKET_INDEX_SERIES = {
+      '1m': {
+        labels: ['4/16', '4/23', '4/30', '5/7', '5/14'],
+        sp500: [100, 101.2, 99.8, 102.5, 103.8],
+        nasdaq: [100, 102.1, 101.5, 104.2, 106.1],
+        csi300: [100, 99.2, 98.5, 100.1, 101.2],
+        insight: '<strong>读图要点：</strong>近 1 个月纳指最强（+6.1%），标普跟随（+3.8%），沪深 300 仅微涨（+1.2%）。短线资金仍集中在 AI 产业链，A 股以震荡蓄势为主。',
+      },
+      '3m': {
+        labels: ['2/16', '3/2', '3/16', '3/30', '4/13', '4/27', '5/11'],
+        sp500: [100, 99, 101, 102, 101, 105, 106.2],
+        nasdaq: [100, 101, 104, 106, 105, 110, 111.4],
+        csi300: [100, 98, 99, 100, 99, 101, 102.8],
+        insight: '<strong>读图要点：</strong>近 3 个月纳指涨幅领先（+11.4%），显著跑赢沪深 300（+2.8%），反映全球资金仍偏好 AI 与科技成长；A 股大盘震荡偏强但弹性较弱。',
+      },
+      '6m': {
+        labels: ['11月', '12月', '1月', '2月', '3月', '4月', '5月'],
+        sp500: [100, 102, 104, 103, 105, 106, 108.5],
+        nasdaq: [100, 105, 108, 107, 112, 114, 118.2],
+        csi300: [100, 99, 101, 100, 102, 103, 104.1],
+        insight: '<strong>读图要点：</strong>半年维度纳指 +18.2% 一骑绝尘，标普 +8.5% 稳健上行，沪深 300 +4.1% 温和修复。全球成长风格占优，均衡配置者可关注 A 股补涨窗口但不宜激进追高。',
+      },
+      '1y': {
+        labels: ['2025Q2', 'Q3', 'Q4', '2026Q1', 'Q2'],
+        sp500: [100, 105, 108, 106, 112.4],
+        nasdaq: [100, 112, 118, 115, 124.6],
+        csi300: [100, 97, 99, 101, 103.5],
+        insight: '<strong>读图要点：</strong>过去一年纳指 +24.6%、标普 +12.4%，沪深 300 +3.5%。中美市场分化明显：美股由 AI Capex 驱动，A 股受地产与流动性预期制约。长期投资者宜按资产类别分散，而非单押单一市场。',
+      },
+    };
+
+    let marketIndexPeriod = '3m';
+    const marketIndexVisible = new Set(['sp500', 'nasdaq', 'csi300']);
+
+    function periodReturn(series) {
+      const first = series[0], last = series[series.length - 1];
+      const pct = ((last - first) / first) * 100;
+      const sign = pct >= 0 ? '+' : '';
+      return { pct, text: '区间 ' + sign + pct.toFixed(1) + '%', up: pct >= 0 };
+    }
+
+    function updateIndexStats(period) {
+      const pack = MARKET_INDEX_SERIES[period];
+      if (!pack) return;
+      document.querySelectorAll('#index-stat-row .index-stat').forEach(el => {
+        const key = el.dataset.index;
+        const meta = MARKET_INDEX_META[key];
+        const series = pack[key];
+        if (!meta || !series) return;
+        const ret = periodReturn(series);
+        const valEl = el.querySelector('.val');
+        const chgEl = el.querySelector('.chg');
+        if (valEl) valEl.textContent = meta.price;
+        if (chgEl) {
+          chgEl.textContent = ret.text;
+          chgEl.className = 'chg ' + (ret.up ? 'num-up' : 'num-down');
+        }
+        el.style.opacity = marketIndexVisible.has(key) ? '1' : '0.35';
+      });
+      const insight = document.getElementById('index-insight');
+      if (insight && pack.insight) insight.innerHTML = pack.insight;
+    }
+
+    function drawMarketIndexChart(period) {
+      period = period || marketIndexPeriod;
+      marketIndexPeriod = period;
+      const pack = MARKET_INDEX_SERIES[period];
+      if (!pack) return;
+
+      const canvas = document.getElementById('chart-market-index');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.parentElement.getBoundingClientRect();
+      if (rect.width < 10 || rect.height < 10) return;
+
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
+
+      const w = rect.width, h = rect.height;
+      const pad = { t: 20, r: 20, b: 32, l: 44 };
+      const cw = w - pad.l - pad.r, ch = h - pad.t - pad.b;
+      const labels = pack.labels;
+
+      const activeKeys = ['sp500', 'nasdaq', 'csi300'].filter(k => marketIndexVisible.has(k));
+      const allVals = activeKeys.flatMap(k => pack[k]);
+      let min = Math.min(...allVals), max = Math.max(...allVals);
+      const margin = (max - min) * 0.12 || 2;
+      min -= margin;
+      max += margin;
+      const range = max - min || 1;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // 基准线 100
+      const y100 = pad.t + ch - ((100 - min) / range) * ch;
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
+      ctx.setLineDash([4, 4]);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(pad.l, y100);
+      ctx.lineTo(w - pad.r, y100);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.6)';
+      ctx.font = '10px Inter, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText('100', pad.l - 6, y100 + 3);
+
+      // 网格与 Y 轴刻度（相对涨跌 %）
+      const steps = 4;
+      for (let i = 0; i <= steps; i++) {
+        const v = min + (range / steps) * i;
+        const y = pad.t + ch - ((v - min) / range) * ch;
+        ctx.strokeStyle = 'rgba(51, 65, 85, 0.35)';
+        ctx.beginPath();
+        ctx.moveTo(pad.l, y);
+        ctx.lineTo(w - pad.r, y);
+        ctx.stroke();
+        const pctLabel = ((v - 100) >= 0 ? '+' : '') + (v - 100).toFixed(0) + '%';
+        ctx.fillStyle = 'rgba(148, 163, 184, 0.55)';
+        ctx.fillText(pctLabel, pad.l - 6, y + 3);
+      }
+
+      // X 轴日期
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.55)';
+      labels.forEach((lb, i) => {
+        const x = pad.l + (cw / Math.max(labels.length - 1, 1)) * i;
+        ctx.fillText(lb, x, h - 8);
+      });
+
+      // 多指数折线
+      activeKeys.forEach(key => {
+        const data = pack[key];
+        const color = MARKET_INDEX_META[key].color;
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2.5;
+        ctx.lineJoin = 'round';
+        data.forEach((v, i) => {
+          const x = pad.l + (cw / Math.max(data.length - 1, 1)) * i;
+          const y = pad.t + ch - ((v - min) / range) * ch;
+          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+
+        // 终点圆点 + 最新涨跌幅
+        const lastI = data.length - 1;
+        const lx = pad.l + (cw / Math.max(data.length - 1, 1)) * lastI;
+        const ly = pad.t + ch - ((data[lastI] - min) / range) * ch;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(lx, ly, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        const ret = periodReturn(data);
+        ctx.font = 'bold 10px Inter, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(ret.text.replace('区间 ', ''), lx + 8, ly - 6);
+      });
+
+      updateIndexStats(period);
+    }
+
+    function setupMarketIndexChart() {
+      document.querySelectorAll('#index-period-tabs .chart-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('#index-period-tabs .chart-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          initialized.delete('chart-market-index');
+          drawMarketIndexChart(tab.dataset.period);
+          initialized.add('chart-market-index');
+        });
+      });
+
+      document.querySelectorAll('#index-legend .index-legend-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const key = btn.dataset.index;
+          if (marketIndexVisible.has(key)) {
+            if (marketIndexVisible.size <= 1) return;
+            marketIndexVisible.delete(key);
+            btn.classList.remove('active');
+          } else {
+            marketIndexVisible.add(key);
+            btn.classList.add('active');
+          }
+          drawMarketIndexChart(marketIndexPeriod);
+        });
+      });
+    }
+
+    const chartConfigs = {
+      'chart-main': () => drawLineChart('chart-main', [118,120,122,119,125,128,126,130,128,131,129,132,130,131,128,130,131,129,131,128,130,132,131,131]),
+      'chart-market': () => drawLineChart('chart-market', [118,120,122,119,125,128,126,130,128,131,129,132,130,131]),
+      'chart-market-index': () => drawMarketIndexChart(marketIndexPeriod),
+      'chart-fundamental': () => drawBarChart('chart-fundamental', [[16,27,27,61,115],[4,10,4,30,58]]),
+      'chart-yield': () => drawLineChart('chart-yield', [4.8,4.6,4.5,4.3,4.2,4.1,4.0,3.9,4.0,4.1,4.2,4.28], '#3b82f6'),
+      'chart-social-fin': () => drawBarChart('chart-social-fin', [[2.1,1.8,2.4,2.0,2.6,2.2,2.8,2.5,3.0,2.7,2.9,3.2]]),
+      'chart-chip': () => drawLineChart('chart-chip', [100,105,108,112,115,118,122,125,128], '#a78bfa'),
+      'chart-portfolio': () => drawLineChart('chart-portfolio', [100,102,105,103,108,112,115,118,122,125,128,130,132,135,138,140,142,145,148,150,152,155,158,160,162,165,168,170,172,175], '#10b981'),
+    };
+
+    const initialized = new Set();
+    function initChartsInPanel(container) {
+      if (!container) container = document;
+      Object.keys(chartConfigs).forEach(id => {
+        if (container.querySelector('#' + id) && !initialized.has(id)) {
+          chartConfigs[id]();
+          initialized.add(id);
+        }
+      });
+    }
+
+    setupMarketIndexChart();
+
+    // Init visible charts
+    initChartsInPanel(document.getElementById('dashboard'));
+    window.addEventListener('resize', () => {
+      initialized.clear();
+      const active = document.querySelector('.panel.active');
+      if (active) initChartsInPanel(active);
+    });
+  </script>
+</body>
+</html>

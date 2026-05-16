@@ -1,0 +1,20 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: @bg-base;
+  padding: 24px;
+}
+
+.card {
+  width: 100%;
+  max-width: 400px;
+  background: @bg-card !important;
+  border: 1px solid @border-color !important;
+
+  :global(.ant-card-head-title) {
+    color: @text-primary;
+    text-align: center;
+  }
+}
