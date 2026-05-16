@@ -97,8 +97,8 @@ frontend/
 
 ### 访问地址
 
-- 首页 / 登录：`https://你的域名.vercel.app/` 或 `/login`
-- 中台（需先登录）：`https://你的域名.vercel.app/app/dashboard`
+- 首页（直达中台）：`https://你的域名.vercel.app/` 或 `/app/dashboard`
+- **无需登录**（已关闭鉴权，适合私人演示）
 
 ### 404 排查
 

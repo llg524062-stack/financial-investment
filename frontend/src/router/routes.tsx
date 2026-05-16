@@ -1,10 +1,9 @@
 import { lazy } from 'react';
+import { Navigate } from 'react-router-dom';
 import type { RouteObject } from 'react-router-dom';
-import { AuthGuard } from './AuthGuard';
 import { AppLayout } from '@/components/layout/AppLayout';
 
 /** Lazy-loaded page modules */
-const LoginPage = lazy(() => import('@/pages/login'));
 const DashboardPage = lazy(() => import('@/pages/dashboard'));
 const AlertsPage = lazy(() => import('@/pages/alerts'));
 const AiInsightsPage = lazy(() => import('@/pages/ai-insights'));
@@ -18,16 +17,11 @@ const NotFoundPage = lazy(() => import('@/pages/errors/NotFound'));
 const ForbiddenPage = lazy(() => import('@/pages/errors/Forbidden'));
 const ServerErrorPage = lazy(() => import('@/pages/errors/ServerError'));
 
-/** Application route tree — add new business routes here */
+/** Application route tree — no login required (private demo) */
 export const routes: RouteObject[] = [
-  { path: '/login', element: <LoginPage /> },
   {
     path: '/app',
-    element: (
-      <AuthGuard>
-        <AppLayout />
-      </AuthGuard>
-    ),
+    element: <AppLayout />,
     children: [
       { index: true, element: <DashboardPage /> },
       { path: 'dashboard', element: <DashboardPage /> },
@@ -41,8 +35,9 @@ export const routes: RouteObject[] = [
       { path: 'settings', element: <SettingsPage /> },
     ],
   },
+  { path: '/login', element: <Navigate to="/app/dashboard" replace /> },
+  { path: '/', element: <Navigate to="/app/dashboard" replace /> },
   { path: '/403', element: <ForbiddenPage /> },
   { path: '/500', element: <ServerErrorPage /> },
-  { path: '/', element: <LoginPage /> },
   { path: '*', element: <NotFoundPage /> },
 ];

@@ -40,8 +40,7 @@ request.interceptors.response.use(
 
     if (status === 401) {
       removeStorageItem(TOKEN_KEY);
-      message.warning('登录已过期，请重新登录');
-      window.location.href = '/login';
+      message.warning('接口未授权（当前站点无需登录，可忽略）');
       return Promise.reject(error);
     }
     if (status === 403) {
