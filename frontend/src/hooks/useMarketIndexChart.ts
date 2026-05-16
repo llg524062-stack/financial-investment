@@ -39,7 +39,7 @@ export function useMarketIndexChart(
       const cw = w - pad.l - pad.r;
       const ch = h - pad.t - pad.b;
       const activeKeys = (['sp500', 'nasdaq', 'csi300'] as IndexKey[]).filter((k) => visible.has(k));
-      const allVals = activeKeys.flatMap((k) => pack[k]);
+      const allVals = activeKeys.flatMap((k) => (Array.isArray(pack[k]) ? pack[k] : []));
       let min = Math.min(...allVals);
       let max = Math.max(...allVals);
       const margin = (max - min) * 0.12 || 2;
@@ -75,7 +75,8 @@ export function useMarketIndexChart(
         ctx.fillText(lb, x, h - 8);
       });
       activeKeys.forEach((k) => {
-        const data = pack[k];
+        const data = Array.isArray(pack[k]) ? pack[k] : [];
+        if (!data.length) return;
         const color = INDEX_META[k].color;
         ctx.beginPath();
         ctx.strokeStyle = color;

@@ -6,6 +6,7 @@ import { syncSymbol } from '@/api/modules/sync';
 import { useLineChart } from '@/hooks/useLineChart';
 import { PageLoading } from '@/components/common/PageLoading';
 import { DataSourceTag } from '@/components/common/DataSourceTag';
+import { asArray } from '@/utils/apiNormalize';
 
 const heatCls = (lvl: number) => {
   if (lvl >= 2) return 'heat-up-3';
@@ -34,18 +35,31 @@ export function SymbolView() {
   useEffect(() => {
     setData(null);
     setLine([]);
-    void Promise.all([fetchSymbolDashboard(symbol), fetchSymbolQuotes(symbol, '3m')]).then(([d, quotes]) => {
-      setData(d);
-      if (quotes.length) {
-        setLine(quotes.map((q) => q.close));
-      } else if (!d.data_ready) {
-        void syncSymbol(symbol).then(() => {
-          void fetchSymbolQuotes(symbol, '3m').then((q) => {
-            if (q.length) setLine(q.map((b) => b.close));
-          });
+    void Promise.all([fetchSymbolDashboard(symbol), fetchSymbolQuotes(symbol, '3m')])
+      .then(([d, quotes]) => {
+        const bars = asArray<{ close: number }>(quotes);
+        setData({
+          ...d,
+          forecast_scenarios: asArray(d.forecast_scenarios),
+          checklist: asArray(d.checklist),
+          ai_points: asArray(d.ai_points),
+          history_events: asArray(d.history_events),
+          peer_heatmap: asArray(d.peer_heatmap),
+          price_cards: asArray(d.price_cards),
+          inline_alerts: asArray(d.inline_alerts),
         });
-      }
-    });
+        if (bars.length) {
+          setLine(bars.map((q) => q.close));
+        } else if (!d.data_ready) {
+          void syncSymbol(symbol).then(() => {
+            void fetchSymbolQuotes(symbol, '3m').then((q) => {
+              const next = asArray<{ close: number }>(q);
+              if (next.length) setLine(next.map((b) => b.close));
+            });
+          });
+        }
+      })
+      .catch(() => setData(null));
   }, [symbol]);
 
   useLineChart(mainRef, line, '#10b981', true);
@@ -162,7 +176,7 @@ export function SymbolView() {
       <div className="insight-block" style={{ marginBottom: 24 }}>
         <h3>🔮 未来预测（12 个月）</h3>
         <div className="bento bento-3">
-          {data.forecast_scenarios.map((s) => (
+          {(data.forecast_scenarios ?? []).map((s) => (
             <div key={s.name} className="card">
               <div className="card-label">{s.name} · {Math.round(s.probability * 100)}%</div>
               <div className="card-value" style={{ fontSize: 16 }}>{s.target_range}</div>

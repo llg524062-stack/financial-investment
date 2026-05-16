@@ -4,6 +4,7 @@ import { REQUEST_RETRY_COUNT, REQUEST_TIMEOUT, TOKEN_KEY } from '@/utils/constan
 import { getStorageItem, removeStorageItem } from '@/utils/storage';
 import type { ApiResponse } from '@/types/api';
 import { reportError } from '@/utils/errorReporter';
+import { unwrapApiData } from '@/utils/apiNormalize';
 
 const cache = new Map<string, { data: unknown; expire: number }>();
 
@@ -76,7 +77,7 @@ export async function httpGet<T>(
     if (hit && hit.expire > Date.now()) return hit.data as T;
   }
   const res = await request.get<ApiResponse<T>>(url, config);
-  const data = (res.data.data ?? res.data) as T;
+  const data = unwrapApiData<T>(res.data);
   if (config?.useCache) {
     cache.set(cacheKey, { data, expire: Date.now() + (config.cacheTtl ?? 60000) });
   }
@@ -85,12 +86,12 @@ export async function httpGet<T>(
 
 export async function httpPost<T>(url: string, body?: unknown, config?: AxiosRequestConfig): Promise<T> {
   const res = await request.post<ApiResponse<T>>(url, body, config);
-  return (res.data.data ?? res.data) as T;
+  return unwrapApiData<T>(res.data);
 }
 
 export async function httpPut<T>(url: string, body?: unknown, config?: AxiosRequestConfig): Promise<T> {
   const res = await request.put<ApiResponse<T>>(url, body, config);
-  return (res.data.data ?? res.data) as T;
+  return unwrapApiData<T>(res.data);
 }
 
 export default request;

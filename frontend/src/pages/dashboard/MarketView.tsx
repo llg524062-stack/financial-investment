@@ -7,6 +7,7 @@ import { useAppStore } from '@/store/appStore';
 import { MarketIndexChart } from '@/components/business/MarketIndexChart';
 import { PageLoading } from '@/components/common/PageLoading';
 import type { AlertItem, IndexCard, StockRowItem } from '@/types/market';
+import { asArray } from '@/utils/apiNormalize';
 
 const badgeClass = (t: IndexCard['changeType']) =>
   t === 'up' ? 'badge-up' : t === 'down' ? 'badge-down' : t === 'warn' ? 'badge-warn' : 'badge-neutral';
@@ -20,21 +21,33 @@ export function MarketView() {
   const [alertCount, setAlertCount] = useState(0);
   const [marketAlerts, setMarketAlerts] = useState<AlertItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
+    setLoading(true);
+    setLoadError(null);
     void Promise.all([
       fetchIndexCards(),
       fetchWatchlist(),
       fetchMarketExtras(),
       fetchAlerts('market'),
-    ]).then(([c, w, ex, alerts]) => {
-      setCards(c);
-      setWatchlist(w);
-      setExtras(ex);
-      setAlertCount(alerts.length);
-      setMarketAlerts(alerts);
-      setLoading(false);
-    });
+    ])
+      .then(([c, w, ex, alerts]) => {
+        setCards(asArray<IndexCard>(c));
+        setWatchlist(asArray<StockRowItem>(w));
+        setExtras(ex && typeof ex === 'object' ? ex : null);
+        const alertList = asArray<AlertItem>(alerts);
+        setAlertCount(alertList.length);
+        setMarketAlerts(alertList);
+      })
+      .catch((err: unknown) => {
+        setCards([]);
+        setWatchlist([]);
+        setExtras(null);
+        setMarketAlerts([]);
+        setLoadError(err instanceof Error ? err.message : '无法连接后端 API，请检查 VITE_API_BASE_URL 与 CORS');
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const heatCls = (lvl: number) => {
@@ -54,6 +67,15 @@ export function MarketView() {
 
   return (
     <>
+      {loadError ? (
+        <div className="card" style={{ marginBottom: 16, borderColor: 'var(--danger)' }}>
+          <p style={{ color: 'var(--danger)', margin: 0 }}>{loadError}</p>
+          <p style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 8 }}>
+            Vercel 需配置 <code>VITE_API_BASE_URL=https://你的Railway域名/api</code>，Railway 需配置{' '}
+            <code>CORS_ORIGINS=https://financial-investment-one.vercel.app</code>
+          </p>
+        </div>
+      ) : null}
       <div className="market-hero">
         <h3>今天市场整体怎么样？</h3>
         <p>
@@ -128,7 +150,7 @@ export function MarketView() {
         <div className="card">
           <div className="card-label">今日行业涨跌</div>
           <div className="heatmap" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-            {(extras?.industry_heatmap ?? []).map((h) => (
+            {asArray<{ name: string; change: number; level: number }>(extras?.industry_heatmap).map((h) => (
               <div key={h.name} className={`heat-cell ${heatCls(h.level)}`}>
                 {h.name}
                 <br />

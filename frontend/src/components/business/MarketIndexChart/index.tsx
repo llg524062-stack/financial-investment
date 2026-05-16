@@ -3,6 +3,7 @@ import { INDEX_META } from '@/constants/indexMeta';
 import { fetchIndexSeries } from '@/api/modules/dashboard';
 import { useMarketIndexChart } from '@/hooks/useMarketIndexChart';
 import type { MarketIndexPeriod } from '@/types/market';
+import { asArray } from '@/utils/apiNormalize';
 
 type IndexKey = keyof typeof INDEX_META;
 type PeriodKey = '1m' | '3m' | '6m' | '1y';
@@ -31,7 +32,16 @@ export function MarketIndexChart() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    void fetchIndexSeries(period).then(setPack);
+    void fetchIndexSeries(period).then((raw) => {
+      const p = raw as MarketIndexPeriod;
+      setPack({
+        labels: asArray(p?.labels),
+        sp500: asArray(p?.sp500, [100]),
+        nasdaq: asArray(p?.nasdaq, [100]),
+        csi300: asArray(p?.csi300, [100]),
+        insight: typeof p?.insight === 'string' ? p.insight : '暂无指数数据，请执行后端同步',
+      });
+    });
   }, [period]);
 
   useMarketIndexChart(canvasRef, pack, visible);
